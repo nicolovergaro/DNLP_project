@@ -1,5 +1,7 @@
 import json
 from nltk.tokenize import sent_tokenize
+from torch.utils.data import Dataset
+from tokenizer import GPT2Tokenizer
 
 
 class NLP_dataset(Dataset):
