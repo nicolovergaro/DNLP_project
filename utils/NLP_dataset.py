@@ -6,7 +6,7 @@ from transformers import GPT2Tokenizer
 
 class NLP_dataset(Dataset):
     def __init__(self, json_file, model_name="gpt2", max_length=1024, add_abstract=True, add_highlights=True, is_test=True):
-        self.tokenizer = GPT2Tokenizer.from_pretrained(model_type)
+        self.tokenizer = GPT2Tokenizer.from_pretrained(model_name)
         self.is_test = is_test
         self.papers = []
         self.labels = []
