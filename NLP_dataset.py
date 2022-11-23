@@ -54,6 +54,6 @@ class NLP_dataset(Dataset):
     def __getitem__(self,item):
         if self.is_test:  # test
             return self.papers[item]
-       else:
+        else:
             return self.papers[item], self.labels[item]
             
