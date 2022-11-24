@@ -58,8 +58,7 @@ class EncodedDataset(Dataset):
         attention_mask = ins["attention_mask"]
         token_type_ids = ins["token_type_ids"]
         
-        outs = self.tokenizer.encode_plus(self.x[i],
-                                    self.y[i],
+        outs = self.tokenizer.encode_plus(self.y[i],
                                     padding="max_length",
                                     max_length=self.max_length,
                                     truncation=True,
