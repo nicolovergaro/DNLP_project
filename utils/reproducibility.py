@@ -1,6 +1,7 @@
 import torch
-import numpy
 import random
+import os
+import numpy as np
 
 SEED = 0
 
