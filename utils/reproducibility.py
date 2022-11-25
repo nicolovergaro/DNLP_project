@@ -4,10 +4,16 @@ import random
 
 SEED = 0
 
-def make_it_reproducible(seed=SEED):
+def make_it_reproducible(seed):
+    torch.manual_seed(seed)
+    torch.cuda.manual_seed(seed)
+    torch.cuda.manual_seed_all(seed)
+    np.random.seed(seed)
     random.seed(seed)
-    numpy.random.seed(seed)
-    torch.manual_seed(0)
+    torch.manual_seed(seed)
+    torch.backends.cudnn.benchmark = False
+    torch.backends.cudnn.deterministic = True
+    os.environ["CUBLAS_WORKSPACE_CONFIG"] = ":4096:8"
     torch.use_deterministic_algorithms(True)
     
 def seed_worker(worker_id):
