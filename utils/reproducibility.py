@@ -5,7 +5,7 @@ import numpy as np
 
 SEED = 0
 
-def make_it_reproducible(seed):
+def make_it_reproducible(seed=SEED):
     torch.manual_seed(seed)
     torch.cuda.manual_seed(seed)
     torch.cuda.manual_seed_all(seed)
@@ -24,5 +24,5 @@ def seed_worker(worker_id):
     
 def get_generator(seed=SEED):
     g = torch.Generator()
-    g.manual_seed(0)
+    g.manual_seed(seed)
     return g
