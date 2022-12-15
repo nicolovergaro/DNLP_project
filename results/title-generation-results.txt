@@ -16,6 +16,6 @@ First tuning on 10% of Misc dataset:
 
 
 First tuning on the entire Misc dataset with highlights and abstract:
-    rouge1:     
-    rouge2:     
-    bertscore:  
+    rouge1: 0.45985199214408384
+    rouge2: 0.25561707946194806
+    bertscore: 0.8999845574661853 
