@@ -16,6 +16,7 @@ class TitleGenDataset(Dataset):
 
         bos = tokenizer.bos_token
         eos = tokenizer.eos_token
+        sep = tokenizer.sep_token
 
         for paper in data.values():
             s = bos  # begin of sequence token
@@ -27,7 +28,7 @@ class TitleGenDataset(Dataset):
             # add abstract if requested
             if use_abstract:
                 if use_highlights:  # add a separation between highlights and abstract
-                    s += " "
+                    s += sep
                 s += paper["abstract"]
 
             s += eos  # end of sequence token
