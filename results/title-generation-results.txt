@@ -1,4 +1,4 @@
-First tuning on 10% of Misc dataset:
+1st tuning on 10% of Misc dataset:
 - highlights only:
     rouge1:     0.3528165143217968
     rouge2:     0.16173788874253056
@@ -15,7 +15,74 @@ First tuning on 10% of Misc dataset:
     bertscore:  0.8948401868343353    (BEST)
 
 
-First tuning on the entire Misc dataset with highlights and abstract:
+1st tuning on the entire Misc dataset with highlights and abstract (pietrocagnasso/bart-paper-titles):
+- Misc test:
     rouge1: 0.45985199214408384
     rouge2: 0.25561707946194806
-    bertscore: 0.8999845574661853 
+    bertscore: 0.8999845574661853
+
+- CS test:
+    rouge1: 0.5150226066785883
+    rouge2: 0.33377359547833396
+    bertscore: 0.9166437987486521
+    
+- AI test:
+    rouge1: 0.42712962400517124
+    rouge2: 0.21780651495394876
+    bertscore: 0.9044620539202834
+    
+- BIO test:
+    rouge1: 0.457578417466386
+    rouge2: 0.2521866035716397
+    bertscore: 0.898945746701003
+    
+
+2nd tuning on CSPubSumm (pietrocagnasso/bart-paper-titles-cs):
+- CS test:
+    rouge1: 0.5584201740488969
+    rouge2: 0.3817657754374963
+    bertscore: 0.9228167812029521
+    
+- AI test:
+    rouge1: 0.44824190908198736
+    rouge2: 0.2514686074631145
+    bertscore: 0.9087199595841494
+    
+- BIO test:
+    rouge1: 0.4534994667584432
+    rouge2: 0.24497967650307212
+    bertscore: 0.8985524293215301
+    
+    
+2nd tuning on BIOPubSumm (pietrocagnasso/bart-paper-titles-bio):
+- CS test:
+    rouge1: 0.4976860482380896
+    rouge2: 0.3077308420389538
+    bertscore: 0.9167378294467926
+    
+- AI test:
+    rouge1: 0.4445549197949771
+    rouge2: 0.23214337881024177
+    bertscore: 0.9080593757557146
+    
+- BIO test:
+    rouge1: 0.4597935871013843
+    rouge2: 0.25406085183816984
+    bertscore: 0.9006350871133981
+    
+
+2nd tuning on AIPubSumm (pietrocagnasso/bart-paper-titles-ai):
+- CS test:
+    rouge1: 0.5228071241239294
+    rouge2: 0.3314013549744588
+    bertscore: 0.9172684196631113
+    
+- AI test:
+    rouge1: 0.4332465576730597
+    rouge2: 0.22396533754801487
+    bertscore: 0.904642644253644
+    
+- BIO test:
+    rouge1: 0.4547227529760554
+    rouge2: 0.24739079706315134
+    bertscore: 0.897325964067062
