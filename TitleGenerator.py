@@ -269,7 +269,7 @@ class TitleGenerator():
                         min_length=3,
                         max_length=32
                     )
-            pred_title = self.tokenizer.decode(outs, skip_special_tokens=True)
+            pred_title = self.tokenizer.batch_decode(outs, skip_special_tokens=True)
 
             pred_titles.append(pred_title)
 
