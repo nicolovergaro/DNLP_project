@@ -14,5 +14,7 @@ All the results (Rouge1, Rouge2, BertScore) are available in the results folder.
 
 on the papers in the CSPubSumm.
 
+You can find a demo hosted on [HF spaces](https://huggingface.co/spaces/pietrocagnasso/paper-title-generation) to see all the models in action.
+
 ## Second Extension
 The second extension is a Probabilistic Context Enrichment aiming to improve the performance obtained by [THExt](https://www.sciencedirect.com/science/article/abs/pii/S0950705122006931) ([GitHub repo](https://github.com/MorenoLaQuatra/THExt)).
