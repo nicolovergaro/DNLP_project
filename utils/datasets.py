@@ -3,7 +3,7 @@ from torch.utils.data import Dataset
 
 
 class TitleGenDataset(Dataset):
-    def __init__(self, json_file, tokenizer, max_input_length, max_target_length, use_highlights=True, use_abstract=True, is_test=False):
+    def __init__(self, json_file, tokenizer, max_input_length=1024, max_target_length=128, use_highlights=True, use_abstract=True, is_test=False):
         self.tokenizer = tokenizer
         self.max_input_length = max_input_length
         self.max_target_length = max_target_length
