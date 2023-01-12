@@ -155,7 +155,7 @@ class TitleGenerator():
                         min_length=3,
                         max_length=32
                     )
-            pred_titles = self.tokenizer.batch_decode(outs[0], skip_special_tokens=True)
+            pred_titles = self.tokenizer.batch_decode(outs, skip_special_tokens=True)
             
             print(pred_titles)
             print(real_titles)
