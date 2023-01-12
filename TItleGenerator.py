@@ -191,7 +191,7 @@ class TitleGenerator():
         # tokenize the sentence
         x = self.tokenizer.encode(s,
                 padding="max_length",
-                max_length=self.max_input_length,
+                max_length=1024,
                 truncation=True,
                 return_attention_mask=True,
                 return_tensors='pt'
