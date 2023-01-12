@@ -3,11 +3,11 @@ from torch.utils.data import Dataset
 
 
 class TitleGenDataset(Dataset):
-    def __init__(self, json_file, tokenizer, max_input_length=1024, max_target_length=128, use_highlights=True, use_abstract=True, is_test=False):
+    def __init__(self, json_file, tokenizer, max_input_length=1024, max_target_length=128, use_highlights=True, use_abstract=True, inference=False):
         self.tokenizer = tokenizer
         self.max_input_length = max_input_length
         self.max_target_length = max_target_length
-        self.is_test = is_test
+        self.inference = inference
         self.inputs = []
         self.targets = []
         
@@ -34,7 +34,7 @@ class TitleGenDataset(Dataset):
             s += eos  # end of sequence token
 
             self.inputs.append(s)
-            if not is_test:
+            if not inference:
                 self.targets.append(paper["title"])
 
     def __getitem__(self, index):
@@ -51,7 +51,7 @@ class TitleGenDataset(Dataset):
                                   truncation=True,
                                   return_tensors='pt')
         
-        if self.is_test:
+        if self.inference:
             return {"input_ids": x["input_ids"][0], "attention_mask": x["attention_mask"][0]}
         else:
             return {"input_ids": x["input_ids"][0], "attention_mask": x["attention_mask"][0], "labels": y["input_ids"][0]}
