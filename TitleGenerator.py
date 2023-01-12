@@ -295,13 +295,16 @@ class TitleGenerator():
         references = [v["title"] for v in data.values()]
         predicted = self.generate_titles(json_file, use_highlights, use_abstract)
         
-        rg_out = self.rouge.compute(predictions=pred_titles, references=real_titles, rouge_types=["rouge1", "rouge2"])
+        rg_out = self.rouge.compute(predictions=predicted, 
+                                    references=references, 
+                                    rouge_types=["rouge1", "rouge2"]
+                                   )
         rouge1 += rg_out["rouge1"]
         rouge2 += rg_out["rouge2"]
-        bs_res = self.bertscore.compute(predictions=pred_titles,
-                        references=real_titles,
-                        lang="en"
-                    )
+        bs_res = self.bertscore.compute(predictions=predicted,
+                                        references=references
+                                        lang="en"
+                                       )
         bs = np.mean(bs_res)
         
         return {"rouge1": rouge1, "rouge2": rouge2, "bertscore": bs}
