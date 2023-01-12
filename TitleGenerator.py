@@ -29,7 +29,7 @@ class TitleGenerator():
                 fine-tuned for an additional epoch on the AI dataset
                 R1: 0.4332, R2: 0.2239, BS: 0.9046
 
-        Attributes:
+        Parameters:
             model_name: string with the name of the model to be used, by default it is the model
                 trained on all the datasets
         """
@@ -65,7 +65,7 @@ class TitleGenerator():
             ...
         }
 
-        Attributes:
+        Parameters:
             train_ds_json: path to a json file following the format described above
             test_ds_json: path to a json file following the format described above
             epochs: number of training epochs
@@ -186,7 +186,7 @@ class TitleGenerator():
         This method can be used to compute the title given the highlights and the abstract of a
         single paper.
 
-        Attributes:
+        Parameters:
             highlights: list of highlights for the paper
             abstract: abstract of the paper
             use_highlights: flag to trigger usage of highlights
@@ -239,7 +239,7 @@ class TitleGenerator():
             ...
         }
 
-        Attributes:
+        Parameters:
             json_file: the path to a JSON file following the format described above
         """
 
@@ -275,7 +275,7 @@ class TitleGenerator():
         This method is used internally to preprocess the logits so that they enter the metric
         computation method already as predictions.
 
-        Attributes:
+        Parameters:
             logits: logits coming from the forward step of the model
             labels: labels associated to the logits
         """
@@ -289,7 +289,7 @@ class TitleGenerator():
         This method is used internally to compute some metric in the training phase to decide the
         best model.
 
-        Attributes:
+        Parameters:
             pred: predictions coming from the _preprocess_logits_for_metrics
         """
 
