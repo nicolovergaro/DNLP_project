@@ -38,7 +38,7 @@ class TitleGenerator():
         self.tokenizer = AutoTokenizer.from_pretrained(model_name)
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
         self.model = BartForConditionalGeneration.from_pretrained(model_name).to(self.device)
-        self.rouge = Rouge()
+        self.rouge = evaluate.load("rouge")
         self.bertscore = evaluate.load("bertscore")
 
 
@@ -158,9 +158,9 @@ class TitleGenerator():
             pred_titles = self.tokenizer.batch_decode(outs, skip_special_tokens=True)
 
             # compute and update metrics
-            rg_out = self.rouge.get_scores(pred_titles, real_titles)
-            rouge1 += sum([s["rouge-1"]["f"] for s in rg_out])
-            rouge2 += sum([s["rouge-2"]["f"] for s in rg_out])
+            rg_out = self.rouge.compute(predictions=pred_str, references=label_str, rouge_types=["rouge1", "rouge2"])
+            rouge1 += rg_out["rouge1"]
+            rouge2 += rg_out["rouge2"]
             bs_res = self.bertscore.compute(predictions=pred_titles,
                             references=real_titles,
                             lang="en"
@@ -306,9 +306,7 @@ class TitleGenerator():
         label_str = self.tokenizer.batch_decode(label_ids, skip_special_tokens=True)
 
         #compute the metrics
-        rg_out = self.rouge.get_scores(pred_str, label_str)
-        r1f = np.mean([s["rouge-1"]["f"] for s in rg_out])
-        r2f = np.mean([s["rouge-2"]["f"] for s in rg_out])
+        rg_out = self.rouge.compute(predictions=pred_str, references=label_str, rouge_types=["rouge1", "rouge2"])
         bs_res = self.bertscore.compute(predictions=pred_str,
                         references=label_str,
                         lang="en"
