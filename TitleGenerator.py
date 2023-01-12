@@ -306,12 +306,14 @@ class TitleGenerator():
 
         #compute the metrics
         rg_out = self.rouge.get_scores(pred_str, label_str)
+        r1f = np.mean([s["rouge-1"]["f"] for s in rg_out])
+        r2f = np.mean([s["rouge-2"]["f"] for s in rg_out])
         bs_res = self.bertscore.compute(predictions=pred_str,
                         references=label_str,
                         lang="en"
                     )
 
-        return {"bertscore": round(np.mean(bs_res["recall"]), 4),
-                    "R1": round(rg_out["rouge-1"]["f"], 4),
-                    "R2": round(rg_out["rouge-2"]["f"], 4)
+        return {"bertscore": round(np.mean(bs_res["f1"]), 4),
+                    "R1": round(r1f, 4),
+                    "R2": round(r2f, 4)
                 }
