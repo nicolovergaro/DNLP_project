@@ -18,3 +18,12 @@ You can find a demo hosted on [HF spaces](https://huggingface.co/spaces/pietroca
 
 ## Second Extension
 The second extension is a Probabilistic Context Enrichment aiming to improve the performance obtained by [THExt](https://www.sciencedirect.com/science/article/abs/pii/S0950705122006931) ([GitHub repo](https://github.com/MorenoLaQuatra/THExt)).
+
+## Requirements
+Our experiments were carried out using the following packages:
+* transformers 4.25.1
+* torch 1.11.0
+* rouge 1.0.1
+* evaluate 0.4.0
+* rouge_score 0.1.2
+* bert_score 0.3.12
