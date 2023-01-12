@@ -269,9 +269,9 @@ class TitleGenerator():
                         min_length=3,
                         max_length=32
                     )
-            pred_titles = self.tokenizer.batch_decode(outs, skip_special_tokens=True)
+            predictions = self.tokenizer.batch_decode(outs, skip_special_tokens=True)
 
-            for title in pred_titles:
+            for title in predictions:
                 pred_titles.append(title)
 
         return pred_titles
