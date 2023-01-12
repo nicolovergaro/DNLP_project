@@ -161,10 +161,11 @@ class TitleGenerator():
                                     )
             rouge1 += rgs["rouge1"]
             rouge2 += rgs["rouge2"]
-            bertscore += np.mean(self.bertscore(predicstions=pred_titles,
-                                                    references=real_titles,
-                                                    lang="en"
-                                                ))
+            bertscore += np.mean(self.bertscore.compute(
+                                        predicstions=pred_titles,
+                                        references=real_titles,
+                                        lang="en"
+                                    ))
 
         # compute the average of the metrics
         rouge1 /= len(test_ds)
@@ -177,11 +178,11 @@ class TitleGenerator():
         bertscore: {bertscore}""")
 
 
-    def generate_title_on_spot(self,
-                               highlights=None,
-                               abstract=None,
-                               use_highlights=True,
-                               use_abstract=True):
+    def generate_title(self,
+                       highlights=None,
+                       abstract=None,
+                       use_highlights=True,
+                       use_abstract=True):
         """
         This method can be used to compute the title given the highlights and the abstract of a
         single paper.
