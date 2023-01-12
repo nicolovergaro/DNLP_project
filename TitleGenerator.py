@@ -153,6 +153,8 @@ class TitleGenerator():
                         max_length=32
                     )
             pred_titles = self.tokenizer.decode(outs[0], skip_special_tokens=True)
+            
+            print(type(pred_titles), type(real_titles))
 
             # compute and update metrics
             rgs = self.rouge.compute(predictions=[pred_titles],
