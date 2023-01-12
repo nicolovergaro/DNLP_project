@@ -302,7 +302,7 @@ class TitleGenerator():
         rouge1 += rg_out["rouge1"]
         rouge2 += rg_out["rouge2"]
         bs_res = self.bertscore.compute(predictions=predicted,
-                                        references=references
+                                        references=references,
                                         lang="en"
                                        )
         bs = np.mean(bs_res)
