@@ -13,6 +13,8 @@ from transformers import BartForConditionalGeneration, AutoTokenizer, TrainingAr
 from utils.reproducibility import *
 from utils.datasets import TitleGenDataset
 
+rg = Rouge()
+
 
 class TitleGenerator():
     def __init__(self, model_name="pietrocagnasso/bart-paper-titles"):
@@ -305,7 +307,13 @@ class TitleGenerator():
                                         references=references,
                                         lang="en"
                                        )
-        bs = np.mean(bs_res)
+        bs = np.mean(bs_res["f1"])
+        
+        scores = rg.get_scores(predicted, references)
+        r1p = np.mean([s["rouge1"]["p"] s in scores])
+        r1r = np.mean([s["rouge1"]["r"] s in scores])
+        r1f = np.mean([s["rouge1"]["f"] s in scores])
+        print(r1p, r1r, r1f)
         
         return {"rouge1": rouge1, "rouge2": rouge2, "bertscore": bs}
 
