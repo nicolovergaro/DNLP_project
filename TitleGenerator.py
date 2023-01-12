@@ -161,9 +161,8 @@ class TitleGenerator():
                                     )
             rouge1 += rgs["rouge1"]
             rouge2 += rgs["rouge2"]
-            bertscore += np.mean(self.bertscore.compute(
-                                        predicstions=pred_titles,
-                                        references=real_titles,
+            bertscore += np.mean(self.bertscore.compute(predicstions=[pred_titles],
+                                        references=[real_titles],
                                         lang="en"
                                     ))
 
