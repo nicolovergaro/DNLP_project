@@ -9,6 +9,7 @@ All the results (Rouge1, Rouge2, BertScore) are available in the results folder.
 * Rouge1: 0.55
 * Rouge2: 0.38
 * BertScore: 0.92
+
 on the papers in the CSPubSumm.
 
 ## Second Extension
