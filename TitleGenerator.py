@@ -42,6 +42,8 @@ class TitleGenerator():
 
 
     def train(self, train_ds_json, test_ds_json,
+                use_highlights=True,
+                use_abstract=True,
                 epochs=1,
                 per_device_batch_size=4,
                 n_gpus=1,
@@ -85,8 +87,8 @@ class TitleGenerator():
         # build the datasets
         train_ds = TitleGenDataset(json_file=train_ds_json,
                         tokenizer=self.tokenizer,
-                        use_highlights=True,
-                        use_abstract=True
+                        use_highlights=use_highlights,
+                        use_abstract=use_abstract
                     )
         if epochs > 1:
             train_ds, eval_ds = random_split(train_ds,
@@ -95,8 +97,8 @@ class TitleGenerator():
 
         test_ds = TitleGenDataset(json_file=test_ds_json,
                         tokenizer=self.tokenizer,
-                        use_highlights=True,
-                        use_abstract=True
+                        use_highlights=use_highlights,
+                        use_abstract=use_abstract
                     )
         if epochs == 1:
             eval_ds = test_ds
@@ -175,7 +177,11 @@ class TitleGenerator():
         bertscore: {bertscore}""")
 
 
-    def generate_title_on_spot(self, highlights, abstract):
+    def generate_title_on_spot(self,
+                               highlights=None,
+                               abstract=None,
+                               use_highlights=True,
+                               use_abstract=True):
         """
         This method can be used to compute the title given the highlights and the abstract of a
         single paper.
@@ -183,10 +189,20 @@ class TitleGenerator():
         Attributes:
             highlights: list of highlights for the paper
             abstract: abstract of the paper
+            use_highlights: flag to trigger usage of highlights
+            use_abstract: flag to trigger usage of the abstract
         """
+        
+        if (not use_highlights and not use_abstract) or (highlights is None and abstract is None):
+            print("Warning: not elements to put inside the input.")
+            return
 
         # compose the sentence
-        s = f" {self.tokenizer.sep_token}".join(highlights) + f" {self.tokenizer.sep_token} " + abstract
+        s = f"{self.tokenizer.bos_token} "
+        if use_highlights and highlights is not None:
+            s += f" {self.tokenizer.sep_token} ".join(highlights)
+        if use_abstract and abstract is not None:
+            s += f" {self.tokenizer.sep_token} " + abstract + f" {self.tokenizer.eos_token}"
 
         # tokenize the sentence
         x = self.tokenizer.encode_plus(s,
@@ -209,7 +225,9 @@ class TitleGenerator():
         return pred_title
 
     
-    def generate_titles(self, json_file):
+    def generate_titles(self, json_file,
+                            use_highlights=True,
+                            use_abstract=True):
         """
         This method can be used to predict the titles for a set of paper. The papers have to passed
         via a JSON file in the following format:
@@ -228,8 +246,8 @@ class TitleGenerator():
         # build the dataset
         ds = TitleGenDataset(json_file=json_file,
                     tokenizer=self.tokenizer,
-                    use_highlights=True,
-                    use_abstract=True,
+                    use_highlights=use_highlights,
+                    use_abstract=use_abstract,
                     inference=True
                 )
 
