@@ -5,6 +5,7 @@ import evaluate
 import numpy as np
 
 from tqdm import tqdm
+from rouge import Rouge
 from torch.utils.data import random_split
 from transformers import BartForConditionalGeneration, AutoTokenizer, TrainingArguments, Trainer
 
@@ -37,7 +38,7 @@ class TitleGenerator():
         self.tokenizer = AutoTokenizer.from_pretrained(model_name)
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
         self.model = BartForConditionalGeneration.from_pretrained(model_name).to(self.device)
-        self.rouge = evaluate.load("rouge")
+        self.rouge = Rouge()
         self.bertscore = evaluate.load("bertscore")
 
 
@@ -157,16 +158,13 @@ class TitleGenerator():
             print(type(pred_titles), type(real_titles))
 
             # compute and update metrics
-            rgs = self.rouge.compute(predictions=[pred_titles],
-                                        references=[real_titles],
-                                        rouge_types=["rouge1", "rouge2"]
-                                    )
-            rouge1 += rgs["rouge1"]
-            rouge2 += rgs["rouge2"]
+            rgs = self.rouge.get_scores(pred_titles, real_titles)
+            rouge1 += rgs["rouge-1"]["f"]
+            rouge2 += rgs["rouge-2"]["f"]
             bertscore += np.mean(self.bertscore.compute(predicstions=[pred_titles],
                                         references=[real_titles],
                                         lang="en"
-                                    ))
+                                    )["f1"])
 
         # compute the average of the metrics
         rouge1 /= len(test_ds)
