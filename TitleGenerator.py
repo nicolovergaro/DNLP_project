@@ -158,7 +158,7 @@ class TitleGenerator():
             pred_titles = self.tokenizer.batch_decode(outs, skip_special_tokens=True)
 
             # compute and update metrics
-            rg_out = self.rouge.compute(predictions=pred_str, references=label_str, rouge_types=["rouge1", "rouge2"])
+            rg_out = self.rouge.compute(predictions=pred_titles, references=real_titles, rouge_types=["rouge1", "rouge2"])
             rouge1 += rg_out["rouge1"]
             rouge2 += rg_out["rouge2"]
             bs_res = self.bertscore.compute(predictions=pred_titles,
