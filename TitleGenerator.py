@@ -305,16 +305,13 @@ class TitleGenerator():
         label_str = self.tokenizer.batch_decode(label_ids, skip_special_tokens=True)
 
         #compute the metrics
-        rg_out = self.rouge.compute(predictions=pred_str,
-                        references=label_str,
-                        rouge_types=["rouge1", "rouge2"]
-                    )
+        rg_out = self.rouge.get_scores(pred_str, label_str)
         bs_res = self.bertscore.compute(predictions=pred_str,
                         references=label_str,
                         lang="en"
                     )
 
         return {"bertscore": round(np.mean(bs_res["recall"]), 4),
-                    "R1": round(rg_out["rouge1"], 4),
-                    "R2": round(rg_out["rouge2"], 4)
+                    "R1": round(rg_out["rouge-1"]["f"], 4),
+                    "R2": round(rg_out["rouge-2"]["f"], 4)
                 }
