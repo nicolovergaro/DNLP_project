@@ -269,9 +269,10 @@ class TitleGenerator():
                         min_length=3,
                         max_length=32
                     )
-            pred_title = self.tokenizer.batch_decode(outs, skip_special_tokens=True)
+            pred_titles = self.tokenizer.batch_decode(outs, skip_special_tokens=True)
 
-            pred_titles.append(pred_title)
+            for title in pred_titles:
+                pred_titles.append(title)
 
         return pred_titles
     
@@ -294,8 +295,16 @@ class TitleGenerator():
         references = [v["title"] for v in data.values()]
         predicted = self.generate_titles(json_file, use_highlights, use_abstract)
         
-        print(predicted)
-        return
+        rg_out = self.rouge.compute(predictions=pred_titles, references=real_titles, rouge_types=["rouge1", "rouge2"])
+        rouge1 += rg_out["rouge1"]
+        rouge2 += rg_out["rouge2"]
+        bs_res = self.bertscore.compute(predictions=pred_titles,
+                        references=real_titles,
+                        lang="en"
+                    )
+        bs = np.mean(bs_res)
+        
+        return {"rouge1": rouge1, "rouge2": rouge2, "bertscore": bs}
 
 
     def _preprocess_logits_for_metrics(self, logits, labels):
