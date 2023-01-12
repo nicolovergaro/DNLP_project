@@ -241,6 +241,8 @@ class TitleGenerator():
 
         Parameters:
             json_file: the path to a JSON file following the format described above
+            use_highlights: flag to trigger usage of highlights
+            use_abstract: flag to trigger usage of the abstract
         """
 
         # build the dataset
