@@ -141,7 +141,7 @@ class TitleGenerator():
         print("--- TEST THE MODEL ---")
         rouge1, rouge2, bertscore = 0, 0, 0
         
-        test_dl = DataLoader(test_ds, batch_size=8)
+        test_dl = DataLoader(test_ds, batch_size=4)
 
         for data in tqdm(test_dl):
             input_ids, labels = data["input_ids"], data["labels"]
@@ -168,8 +168,8 @@ class TitleGenerator():
             bertscore += sum(bs_res["f1"])
 
         # compute the average of the metrics
-        rouge1 /= len(test_ds)
-        rouge2 /= len(test_ds)
+        rouge1 /= len(test_dl)
+        rouge2 /= len(test_dl)
         bertscore /= len(test_ds)
 
         print(f"""RESULTS:
@@ -253,24 +253,48 @@ class TitleGenerator():
                     use_abstract=use_abstract,
                     inference=True
                 )
+        
+        dl = DataLoader(ds, batch_size=8)
 
         pred_titles = []
 
         print("--- PREDICTING TITLES ---")
-        for data in tqdm(ds):
+        for data in tqdm(dl):
             input_ids = data["input_ids"]
 
             # predict and decode titles
-            outs = self.model.generate(input_ids.unsqueeze(dim=0).to(self.device),
+            outs = self.model.generate(input_ids.to(self.device),
                         num_beams=5,
                         min_length=3,
                         max_length=32
                     )
-            pred_title = self.tokenizer.decode(outs[0], skip_special_tokens=True)
+            pred_title = self.tokenizer.decode(outs, skip_special_tokens=True)
 
             pred_titles.append(pred_title)
 
         return pred_titles
+    
+    
+    def evaluate_on_dataset(self, json_file,
+                           use_highlights=True,
+                           use_abstract=True):
+        """
+        Methods that can be used to evaluate the metrics Rouge1, ROuge2, and BertScore for
+        all the papers in a dataset.
+        
+        Parameters:
+            json_file: path to a JSON file with the format required by the dataset
+            use_highlights: flag to trigger usage of highlights
+            use_abstract: flag to trigger usage of the abstract
+        """
+        with open(json_file) as f:
+            data = json.load(f)
+            
+        references = [v["title"] for v in data.values()]
+        predicted = self.generate_titles(json_file, use_highlights, use_abstract)
+        
+        print(predicted)
+        return
 
 
     def _preprocess_logits_for_metrics(self, logits, labels):
