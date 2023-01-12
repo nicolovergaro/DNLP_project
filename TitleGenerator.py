@@ -162,17 +162,18 @@ class TitleGenerator():
 
             # compute and update metrics
             rg_out = self.rouge.get_scores(pred_titles, real_titles)
-            rouge1 += np.mean([s["rouge-1"]["f"] for s in rg_out])
-            rouge2 += np.mean([s["rouge-2"]["f"] for s in rg_out])
-            bertscore += np.mean(self.bertscore.compute(predicstions=pred_titles,
-                                        references=real_titles,
-                                        lang="en"
-                                    )["f1"])
+            rouge1 += sum([s["rouge-1"]["f"] for s in rg_out])
+            rouge2 += sum([s["rouge-2"]["f"] for s in rg_out])
+            bs_res = self.bertscore.compute(predictions=pred_titles,
+                            references=real_titles,
+                            lang="en"
+                        )
+            bertscore += sum(bs_res["f1"])
 
         # compute the average of the metrics
-        rouge1 /= len(test_dl)
-        rouge2 /= len(test_dl)
-        bertscore /= len(test_dl)
+        rouge1 /= len(test_ds)
+        rouge2 /= len(test_ds)
+        bertscore /= len(test_ds)
 
         print(f"""RESULTS:
         rouge1: {rouge1}
