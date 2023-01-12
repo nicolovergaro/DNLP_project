@@ -13,4 +13,4 @@ All the results (Rouge1, Rouge2, BertScore) are available in the results folder.
 on the papers in the CSPubSumm.
 
 ## Second Extension
-The second extension is a Probabilistic Context Enrichment aiming to improve the performance obtained by [THExt](https://www.sciencedirect.com/science/article/abs/pii/S0950705122006931) ([GitHubRepository](https://github.com/MorenoLaQuatra/THExt)).
+The second extension is a Probabilistic Context Enrichment aiming to improve the performance obtained by [THExt](https://www.sciencedirect.com/science/article/abs/pii/S0950705122006931) ([GitHub repo](https://github.com/MorenoLaQuatra/THExt)).
