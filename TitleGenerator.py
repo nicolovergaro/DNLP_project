@@ -139,7 +139,7 @@ class TitleGenerator():
 
         # test the model
         print("--- TEST THE MODEL ---")
-        rouge1 , rouge2, bertscore = 0, 0, 0
+        rouge1, rouge2, bertscore = 0, 0, 0
 
         for data in tqdm(test_ds):
             input_ids, labels = data["input_ids"], data["labels"]
@@ -159,8 +159,8 @@ class TitleGenerator():
 
             # compute and update metrics
             rgs = self.rouge.get_scores(pred_titles, real_titles)
-            rouge1 += rgs["rouge-1"]["f"]
-            rouge2 += rgs["rouge-2"]["f"]
+            rouge1 += np.mean([s["rouge-1"]["f"] for s in rg_out])
+            rouge2 += np.mean([s["rouge-2"]["f"] for s in rg_out])
             bertscore += np.mean(self.bertscore.compute(predicstions=[pred_titles],
                                         references=[real_titles],
                                         lang="en"
