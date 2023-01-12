@@ -6,7 +6,7 @@ import numpy as np
 
 from tqdm import tqdm
 from rouge import Rouge
-from torch.utils.data import random_split
+from torch.utils.data import random_split, DataLoader
 from transformers import BartForConditionalGeneration, AutoTokenizer, TrainingArguments, Trainer
 
 from utils.reproducibility import *
@@ -140,20 +140,22 @@ class TitleGenerator():
         # test the model
         print("--- TEST THE MODEL ---")
         rouge1, rouge2, bertscore = 0, 0, 0
+        
+        test_dl = DataLoader(test_ds, batch_size=8)
 
-        for data in tqdm(test_ds):
+        for data in tqdm(test_dl):
             input_ids, labels = data["input_ids"], data["labels"]
 
             # decode the original titles
-            real_titles = self.tokenizer.decode(labels, skip_special_tokens=True)
+            real_titles = self.tokenizer.batch_decode(labels, skip_special_tokens=True)
 
             # predict and decode titles
-            outs = self.model.generate(input_ids.unsqueeze(dim=0).to(self.device),
+            outs = self.model.generate(input_ids.to(self.device),
                         num_beams=5,
                         min_length=3,
                         max_length=32
                     )
-            pred_titles = self.tokenizer.decode(outs[0], skip_special_tokens=True)
+            pred_titles = self.tokenizer.batch_decode(outs[0], skip_special_tokens=True)
             
             print(type(pred_titles), type(real_titles))
 
@@ -161,15 +163,15 @@ class TitleGenerator():
             rg_out = self.rouge.get_scores(pred_titles, real_titles)
             rouge1 += np.mean([s["rouge-1"]["f"] for s in rg_out])
             rouge2 += np.mean([s["rouge-2"]["f"] for s in rg_out])
-            bertscore += np.mean(self.bertscore.compute(predicstions=[pred_titles],
-                                        references=[real_titles],
+            bertscore += np.mean(self.bertscore.compute(predicstions=pred_titles,
+                                        references=real_titles,
                                         lang="en"
                                     )["f1"])
 
         # compute the average of the metrics
-        rouge1 /= len(test_ds)
-        rouge2 /= len(test_ds)
-        bertscore /= len(test_ds)
+        rouge1 /= len(test_dl)
+        rouge2 /= len(test_dl)
+        bertscore /= len(test_dl)
 
         print(f"""RESULTS:
         rouge1: {rouge1}
