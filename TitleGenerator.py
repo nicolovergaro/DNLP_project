@@ -313,6 +313,6 @@ class TitleGenerator():
                     )
 
         return {"bertscore": round(np.mean(bs_res["f1"]), 4),
-                    "R1": round(r1f, 4),
-                    "R2": round(r2f, 4)
+                    "R1": round(rg_out["rouge1"], 4),
+                    "R2": round(rg_out["rouge2"], 4)
                 }
