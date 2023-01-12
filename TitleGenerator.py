@@ -310,9 +310,9 @@ class TitleGenerator():
         bs = np.mean(bs_res["f1"])
         
         scores = rg.get_scores(predicted, references)
-        r1p = np.mean([s["rouge1"]["p"] for s in scores])
-        r1r = np.mean([s["rouge1"]["r"] for s in scores])
-        r1f = np.mean([s["rouge1"]["f"] for s in scores])
+        r1p = np.mean([s["rouge-1"]["p"] for s in scores])
+        r1r = np.mean([s["rouge-1"]["r"] for s in scores])
+        r1f = np.mean([s["rouge-1"]["f"] for s in scores])
         print(r1p, r1r, r1f)
         
         return {"rouge1": rouge1, "rouge2": rouge2, "bertscore": bs}
