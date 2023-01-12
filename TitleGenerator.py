@@ -299,8 +299,8 @@ class TitleGenerator():
                                     references=references, 
                                     rouge_types=["rouge1", "rouge2"]
                                    )
-        rouge1 += rg_out["rouge1"]
-        rouge2 += rg_out["rouge2"]
+        rouge1 = rg_out["rouge1"]
+        rouge2 = rg_out["rouge2"]
         bs_res = self.bertscore.compute(predictions=predicted,
                                         references=references,
                                         lang="en"
