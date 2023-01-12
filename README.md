@@ -1,6 +1,8 @@
 # Deep Natural Language Processing project
 
-Project carried out for the exam of DNLP course at Politecnico di Torino a.y. 2022-2023. Professor: Luca Cagliero, Moreno La Quatra.
+Project carried out for the exam of DNLP course at Politecnico di Torino a.y. 2022-2023.
+
+Professor: Luca Cagliero, Moreno La Quatra.
 
 ## First extension
 Thit first extension is a title generation task. The employed model is BART starting from the pretrained version [distilbart](https://huggingface.co/sshleifer/distilbart-cnn-12-6). The input sequence is a concatenation of the highlights and the abstract of the paper via a SEP token.
