@@ -6,7 +6,7 @@ import numpy as np
 
 from tqdm import tqdm
 from torch.utils.data import random_split
-from transformers import AutoModel, AutoTokenizer, TrainingArguments, Trainer
+from transformers import BartForConditionalGeneration, AutoTokenizer, TrainingArguments, Trainer
 
 from utils.reproducibility import *
 from utils.datasets import TitleGenDataset
@@ -36,7 +36,7 @@ class TitleGenerator():
 
         self.tokenizer = AutoTokenizer.from_pretrained(model_name)
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
-        self.model = AutoModel.from_pretrained(model_name).to(self.device)
+        self.model = BartForConditionalGeneration.from_pretrained(model_name).to(self.device)
         self.rouge = evaluate.load("rouge")
         self.bertscore = evaluate.load("bertscore")
 
