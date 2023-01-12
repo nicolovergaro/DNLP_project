@@ -189,7 +189,7 @@ class TitleGenerator():
         s = f" {self.tokenizer.sep_token}".join(highlights) + f" {self.tokenizer.sep_token} " + abstract
 
         # tokenize the sentence
-        x = self.tokenizer.encode(s,
+        x = self.tokenizer.encode_plus(s,
                 padding="max_length",
                 max_length=1024,
                 truncation=True,
