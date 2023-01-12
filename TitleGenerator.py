@@ -158,7 +158,7 @@ class TitleGenerator():
             print(type(pred_titles), type(real_titles))
 
             # compute and update metrics
-            rgs = self.rouge.get_scores(pred_titles, real_titles)
+            rg_out = self.rouge.get_scores(pred_titles, real_titles)
             rouge1 += np.mean([s["rouge-1"]["f"] for s in rg_out])
             rouge2 += np.mean([s["rouge-2"]["f"] for s in rg_out])
             bertscore += np.mean(self.bertscore.compute(predicstions=[pred_titles],
