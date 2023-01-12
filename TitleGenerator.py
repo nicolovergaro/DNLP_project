@@ -157,7 +157,8 @@ class TitleGenerator():
                     )
             pred_titles = self.tokenizer.batch_decode(outs[0], skip_special_tokens=True)
             
-            print(type(pred_titles), type(real_titles))
+            print(pred_titles)
+            print(real_titles)
 
             # compute and update metrics
             rg_out = self.rouge.get_scores(pred_titles, real_titles)
