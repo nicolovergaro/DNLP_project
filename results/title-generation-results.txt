@@ -1,95 +1,95 @@
 1st tuning on 10% of Misc dataset:
 - highlights only:
-    F@rouge1:     0.3528165143217968
-    F@rouge2:     0.16173788874253056
-    F@bertscore:  0.8790824067261483
+    F@rouge1:    0.3528165143217968
+    F@rouge2:    0.16173788874253056
+    F@bertscore: 0.8790824067261483
     
 - abstract only:
-    F@rouge1:     0.4031332265782636
-    F@rouge2:     0.21412242368394208
-    F@bertscore:  0.8864560142159462
+    F@rouge1:    0.4031332265782636
+    F@rouge2:    0.21412242368394208
+    F@bertscore: 0.8864560142159462
     
-- highlights + abstract:
-    F@rouge1:     0.4287032179064465    (BEST)
-    F@rouge2:     0.22869116935482947   (BEST)
-    F@bertscore:  0.8948401868343353    (BEST)
+- highlights + abstract: (BEST)
+    F@rouge1:    0.4287032179064465
+    F@rouge2:    0.22869116935482947
+    F@bertscore: 0.8948401868343353
 
 
 1st tuning on the entire Misc dataset with highlights and abstract (pietrocagnasso/bart-paper-titles):
 - AI test:
-    F@rouge1: 0.42712962400517124
-    F@rouge2: 0.21780651495394876
-    F@rougel: 0.3525109698028923
+    F@rouge1:    0.42712962400517124
+    F@rouge2:    0.21780651495394876
+    F@rougel:    0.3525109698028923
     F@bertscore: 0.9039090980182994
     
 - BIO test:
-    F@rouge1: 0.457578417466386
-    F@rouge2: 0.2521866035716397
-    F@rougel: 0.39349969234213183
+    F@rouge1:    0.457578417466386
+    F@rouge2:    0.2521866035716397
+    F@rougel:    0.39349969234213183
     F@bertscore: 0.9020485300113721
 
 - CS test:
-    F@rouge1: 0.5150226066785883
-    F@rouge2: 0.33377359547833396
-    F@rougel: 0.45759759546610734
+    F@rouge1:    0.5150226066785883
+    F@rouge2:    0.33377359547833396
+    F@rougel:    0.45759759546610734
     F@bertscore: 0.9170313517252604
     
     
 2nd tuning on AIPubSumm (pietrocagnasso/bart-paper-titles-ai):
-- AI test:
-    F@rouge1: 0.4332465576730597
-    F@rouge2: 0.22396533754801487
-    F@rougel: 0.36069016078755617
-    F@bertscore: 0.9064377690806533
+- AI test:                                  Using THExt highlights:
+    F@rouge1:    0.4332465576730597         0.4408374984648608
+    F@rouge2:    0.22396533754801487        0.23778951178752683
+    F@rougel:    0.36069016078755617        0.36710184699858034
+    F@bertscore: 0.9064377690806533         0.9074610589128552
     
-- BIO test:
-    F@rouge1: 0.4547227529760554
-    F@rouge2: 0.24739079706315134
-    F@rougel: 0.3912057934599496
-    F@bertscore: 0.9013126286653781
+- BIO test:                                 Using THExt highlights:
+    F@rouge1:    0.4547227529760554         0.4393291979397729
+    F@rouge2:    0.24739079706315134        0.23760070615836137
+    F@rougel:    0.3912057934599496         0.38024335518355873
+    F@bertscore: 0.9013126286653781         0.8976233299336912
 
-- CS test:
-    F@rouge1: 0.5228071241239294
-    F@rouge2: 0.3314013549744588
-    F@rougel: 0.46635252280229755
-    F@bertscore: 0.9186118094126383
+- CS test:                                  Using THExt highlights:
+    F@rouge1:    0.5228071241239294         0.4798527311961317
+    F@rouge2:    0.3314013549744588         0.27485830004216544
+    F@rougel:    0.46635252280229755        0.42102968486983816
+    F@bertscore: 0.9186118094126383         0.9109963003794352
     
     
 2nd tuning on BIOPubSumm (pietrocagnasso/bart-paper-titles-bio):
-- BIO test:
-    F@rouge1: 0.4597935871013843
-    F@rouge2: 0.25406085183816984
-    F@rougel: 0.3960679883100807
-    F@bertscore: 0.9027178855633647
+- BIO test:                                 Using THExt highlights:
+    F@rouge1:    0.4597935871013843         0.4479299742979266
+    F@rouge2:    0.25406085183816984        0.24553952110309624
+    F@rougel:    0.3960679883100807         0.3868578497235686
+    F@bertscore: 0.9027178855633647         0.8991944823788001
 
-- AI test:
-    F@rouge1: 0.4445549197949771
-    F@rouge2: 0.23214337881024177
-    F@rougel: 0.35779253134862987
-    F@bertscore': 0.9072088246995752
+- AI test:                                  Using THExt highlights:
+    F@rouge1:    0.4445549197949771         0.4343578448013934
+    F@rouge2:    0.23214337881024177        0.23139934168928458
+    F@rougel:    0.35779253134862987        0.3560724562658072
+    F@bertscore: 0.9072088246995752         0.9042640373562322
     
-- CS test:
-    F@rouge1: 0.4976860482380896
-    F@rouge2: 0.3077308420389538
-    F@rougel: 0.4337582539427195
-    F@bertscore: 0.9156100006898245
+- CS test:                                  Using THExt highlights:
+    F@rouge1:    0.4976860482380896         0.4784196637044557
+    F@rouge2:    0.3077308420389538         0.2885040260310543
+    F@rougel:    0.4337582539427195         0.41636277471501565
+    F@bertscore: 0.9156100006898245         0.9116760011514028
     
 
 2nd tuning on CSPubSumm (pietrocagnasso/bart-paper-titles-cs):
-- CS test:
-    F@rouge1: 0.5584201740488969
-    F@rouge2: 0.3817657754374963
-    F@rougel: 0.501169632070814
-    F@bertscore: 0.9232878923416138
+- CS test:                                  Using THExt highlights:
+    F@rouge1:    0.5584201740488969         0.5178345825673157
+    F@rouge2:    0.3817657754374963         0.33011905238704276
+    F@rougel:    0.501169632070814          0.45447025611198344
+    F@bertscore: 0.9232878923416138         0.9174500095844269
 
-- AI test:
-    F@rouge1: 0.44824190908198736
-    F@rouge2: 0.2514686074631145
-    F@rougel: 0.3732645051867477
-    F@bertscore: 0.907742623126868
+- AI test:                                  Using THExt highlights:
+    F@rouge1:    0.44824190908198736        0.4473350552456596
+    F@rouge2:    0.2514686074631145         0.25299111848590944
+    F@rougel:    0.3732645051867477         0.37414713089771445
+    F@bertscore: 0.907742623126868          0.9083816400080016
     
-- BIO test:
-    F@rouge1: 0.4534994667584432
-    F@rouge2: 0.24497967650307212
-    F@rougel: 0.3861405892250704
-    F@bertscore: 0.9012335716348598
+- BIO test:                                 Using THExt highlights:
+    F@rouge1:    0.4534994667584432         0.4431114034321293
+    F@rouge2:    0.24497967650307212        0.23768238459580737
+    F@rougel:    0.3861405892250704         0.3792036223631762
+    F@bertscore: 0.9012335716348598         0.89853219622573
