@@ -22,16 +22,12 @@ class TitleGenerator():
         The models we fine-tuned for this extensions are available on huggingface:
         - pietrocagnasso/bart-paper-titles: fine-tuned for 1 epoch on all the papers in CS, AI,
                 and BIO datasets
-                Rouge1: 0.4598, Rouge2: 0.2556, BertScore: 0.8999
         - pietrocagnasso/bart-paper-titles-cs: starting from the general one this model is
                 fine-tuned for an additional epoch on the CS dataset
-                R1: 0.5584, R2: 0.3817, BS: 0.9228
         - pietrocagnasso/bart-paper-titles-bio: starting from the general one this model is
                 fine-tuned for an additional epoch on the BIO dataset
-                R1: 0.4597, R2: 0.2540, BS: 0.9006
         - pietrocagnasso/bart-paper-titles-ai: starting from the general one this model is
                 fine-tuned for an additional epoch on the AI dataset
-                R1: 0.4332, R2: 0.2239, BS: 0.9046
 
         Parameters:
             model_name: string with the name of the model to be used, by default it is the model
