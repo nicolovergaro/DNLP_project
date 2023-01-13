@@ -8,22 +8,22 @@ Professor: Luca Cagliero, Moreno La Quatra.
 Thit first extension is a title generation task. The employed model is BART starting from the pretrained version [distilbart](https://huggingface.co/sshleifer/distilbart-cnn-12-6). The input sequence is a concatenation of the highlights and the abstract of the paper via a SEP token.
 
 All the results (Rouge1, Rouge2, BertScore) are available in the results folder. As an example the model fine-tuned on CS gets:
-* Rouge1: 0.55
-* Rouge2: 0.38
-* BertScore: 0.92
+* Rouge1:    0.558
+* Rouge2:    0.382
+* RougeL:    0.501
+* BertScore: 0.923
 
 on the papers in the CSPubSumm.
 
 You can find a demo hosted on [HF spaces](https://huggingface.co/spaces/pietrocagnasso/paper-title-generation) to see all the models in action.
 
 ## Second Extension
-The second extension is a Probabilistic Context Enrichment aiming to improve the performance obtained by [THExt](https://www.sciencedirect.com/science/article/abs/pii/S0950705122006931) ([GitHub repo](https://github.com/MorenoLaQuatra/THExt)).
+The second extension is a Probabilistic Context Extraction aiming to improve the performance obtained by [THExt](https://www.sciencedirect.com/science/article/abs/pii/S0950705122006931) ([GitHub repo](https://github.com/MorenoLaQuatra/THExt)).
 
 ## Requirements
 Our experiments were carried out using the following packages:
 * transformers 4.25.1
 * torch 1.11.0
-* rouge 1.0.1
+* py-rouge 1.1
 * evaluate 0.4.0
-* rouge_score 0.1.2
 * bert_score 0.3.12
