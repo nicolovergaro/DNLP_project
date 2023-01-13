@@ -237,8 +237,9 @@ class TitleGenerator():
 
     
     def generate_titles(self, json_file,
-                            use_highlights=True,
-                            use_abstract=True):
+                        use_highlights=True,
+                        use_abstract=True,
+                        batch_size=8):
         """
         This method can be used to predict the titles for a set of paper. The papers have to passed
         via a JSON file in the following format:
@@ -254,6 +255,7 @@ class TitleGenerator():
             json_file: the path to a JSON file following the format described above
             use_highlights: flag to trigger usage of highlights
             use_abstract: flag to trigger usage of the abstract
+            batch_size: batch size to adapt to gpu memory limitations
         """
 
         # build the dataset
@@ -264,7 +266,7 @@ class TitleGenerator():
                     inference=True
                 )
         
-        dl = DataLoader(ds, batch_size=8)
+        dl = DataLoader(ds, batch_size=batch_size)
 
         pred_titles = []
 
@@ -288,7 +290,8 @@ class TitleGenerator():
     
     def evaluate_on_dataset(self, json_file,
                            use_highlights=True,
-                           use_abstract=True):
+                           use_abstract=True,
+                           batch_size=8):
         """
         Methods that can be used to evaluate the metrics Rouge1, ROuge2, and BertScore for
         all the papers in a dataset.
@@ -308,7 +311,7 @@ class TitleGenerator():
             data = json.load(f)
             
         references = [v["title"] for v in data.values()]
-        predicted = self.generate_titles(json_file, use_highlights, use_abstract)
+        predicted = self.generate_titles(json_file, use_highlights, use_abstract, batch_size)
         
         rg_out = rg.get_scores(predicted, references)
         rouge1 = rg_out["rouge-1"]["f"]
