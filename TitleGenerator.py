@@ -313,7 +313,7 @@ class TitleGenerator():
         rouge1 = rg_out["rouge-1"]["f"]
         rouge2 = rg_out["rouge-2"]["f"]
         rougel = rg_out["rouge-l"]["f"]
-        bs_res = self.bertscore.compute(predictions=predicted,
+        bs_res = bs.compute(predictions=predicted,
                                         references=references,
                                         lang="en"
                                        )
