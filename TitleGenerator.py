@@ -41,8 +41,6 @@ class TitleGenerator():
         self.tokenizer = AutoTokenizer.from_pretrained(model_name)
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
         self.model = BartForConditionalGeneration.from_pretrained(model_name).to(self.device)
-        self.rouge = evaluate.load("rouge")
-        self.bertscore = evaluate.load("bertscore")
 
 
     def train(self, train_ds_json, test_ds_json,
@@ -142,9 +140,15 @@ class TitleGenerator():
 
         # test the model
         print("--- TEST THE MODEL ---")
-        rouge1, rouge2, bertscore = 0, 0, 0
+        rg = Rouge(metrics=['rouge-n', 'rouge-l'],
+                   limit_length=False, max_n=2,
+                   alpha=0.5, stemming=False,
+                   apply_best=False, apply_avg=True)
+        bs = evaluate.load("bertscore")
         
-        test_dl = DataLoader(test_ds, batch_size=4)
+        rouge1, rouge2, rougel, bertscore = 0, 0, 0, 0
+        
+        test_dl = DataLoader(test_ds, batch_size=8)
 
         for data in tqdm(test_dl):
             input_ids, labels = data["input_ids"], data["labels"]
@@ -161,24 +165,27 @@ class TitleGenerator():
             pred_titles = self.tokenizer.batch_decode(outs, skip_special_tokens=True)
 
             # compute and update metrics
-            rg_out = self.rouge.compute(predictions=pred_titles, references=real_titles, rouge_types=["rouge1", "rouge2"])
-            rouge1 += rg_out["rouge1"]
-            rouge2 += rg_out["rouge2"]
-            bs_res = self.bertscore.compute(predictions=pred_titles,
+            rg_out = rg.get_scores(pred_titles, real_titles)
+            rouge1 += rg_out["rouge-1"]["f"] * len(pred_titles)
+            rouge2 += rg_out["rouge-2"]["f"] * len(pred_titles)
+            rougel += rg_out["rouge-l"]["f"] * len(pred_titles)
+            bs_res = bs.compute(predictions=pred_titles,
                             references=real_titles,
                             lang="en"
                         )
             bertscore += sum(bs_res["f1"])
 
         # compute the average of the metrics
-        rouge1 /= len(test_dl)
-        rouge2 /= len(test_dl)
+        rouge1 /= len(test_ds)
+        rouge2 /= len(test_ds)
+        rougel /= len(test_ds)
         bertscore /= len(test_ds)
 
         print(f"""RESULTS:
-        rouge1: {rouge1}
-        rouge2: {rouge2}
-        bertscore: {bertscore}""")
+        F1@rouge1: {rouge1}
+        F1@rouge2: {rouge2}
+        F1@rougel: {rougel}
+        F1@bertscore: {bertscore}""")
 
 
     def generate_title(self,
@@ -291,31 +298,29 @@ class TitleGenerator():
             use_highlights: flag to trigger usage of highlights
             use_abstract: flag to trigger usage of the abstract
         """
+        rg = Rouge(metrics=['rouge-n', 'rouge-l'],
+                   limit_length=False, max_n=2,
+                   alpha=0.5, stemming=False,
+                   apply_best=False, apply_avg=True)
+        bs = evaluate.load("bertscore")
+        
         with open(json_file) as f:
             data = json.load(f)
             
         references = [v["title"] for v in data.values()]
         predicted = self.generate_titles(json_file, use_highlights, use_abstract)
         
-        rg_out = self.rouge.compute(predictions=predicted, 
-                                    references=references, 
-                                    rouge_types=["rouge1", "rouge2"]
-                                   )
-        rouge1 = rg_out["rouge1"]
-        rouge2 = rg_out["rouge2"]
+        rg_out = rg.get_scores(predicted, references)
+        rouge1 = rg_out["rouge-1"]["f"]
+        rouge2 = rg_out["rouge-2"]["f"]
+        rougel = rg_out["rouge-l"]["f"]
         bs_res = self.bertscore.compute(predictions=predicted,
                                         references=references,
                                         lang="en"
                                        )
         bs = np.mean(bs_res["f1"])
         
-        scores = rg.get_scores(predicted, references)
-        r1p = np.mean([s["rouge-1"]["p"] for s in scores])
-        r1r = np.mean([s["rouge-1"]["r"] for s in scores])
-        r1f = np.mean([s["rouge-1"]["f"] for s in scores])
-        print(r1p, r1r, r1f)
-        
-        return {"rouge1": rouge1, "rouge2": rouge2, "bertscore": bs}
+        return {"F@rouge1": rouge1, "F@rouge2": rouge2, "F@rougel": rougel, "F@bertscore": bs}
 
 
     def _preprocess_logits_for_metrics(self, logits, labels):
@@ -340,6 +345,11 @@ class TitleGenerator():
         Parameters:
             pred: predictions coming from the _preprocess_logits_for_metrics
         """
+        rg = Rouge(metrics=['rouge-n', 'rouge-l'],
+                   limit_length=False, max_n=2,
+                   alpha=0.5, stemming=False,
+                   apply_best=False, apply_avg=True)
+        bs = evaluate.load("bertscore")
 
         # extract labels and predictions
         label_ids = pred.label_ids
@@ -351,13 +361,14 @@ class TitleGenerator():
         label_str = self.tokenizer.batch_decode(label_ids, skip_special_tokens=True)
 
         #compute the metrics
-        rg_out = self.rouge.compute(predictions=pred_str, references=label_str, rouge_types=["rouge1", "rouge2"])
-        bs_res = self.bertscore.compute(predictions=pred_str,
+        rg_out = rg.compute(pred_str, label_str)
+        bs_res = bs.compute(predictions=pred_str,
                         references=label_str,
                         lang="en"
                     )
 
         return {"bertscore": round(np.mean(bs_res["f1"]), 4),
-                    "R1": round(rg_out["rouge1"], 4),
-                    "R2": round(rg_out["rouge2"], 4)
+                    "R1": round(rg_out["rouge-1"]["f"], 4),
+                    "R2": round(rg_out["rouge-2"]["f"], 4),
+                    "RL": round(rg_out["rouge-l"]["f"], 4)
                 }
