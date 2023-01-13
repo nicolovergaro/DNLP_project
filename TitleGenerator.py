@@ -361,7 +361,7 @@ class TitleGenerator():
         label_str = self.tokenizer.batch_decode(label_ids, skip_special_tokens=True)
 
         #compute the metrics
-        rg_out = rg.compute(pred_str, label_str)
+        rg_out = rg.get_scores(pred_str, label_str)
         bs_res = bs.compute(predictions=pred_str,
                         references=label_str,
                         lang="en"
