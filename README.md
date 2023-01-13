@@ -7,7 +7,7 @@ Professor: Luca Cagliero, Moreno La Quatra.
 ## First extension
 Thit first extension is a title generation task. The employed model is BART starting from the pretrained version [distilbart](https://huggingface.co/sshleifer/distilbart-cnn-12-6). The input sequence is a concatenation of the highlights and the abstract of the paper via a SEP token.
 
-All the results (Rouge1, Rouge2, BertScore) are available in the results folder. As an example the model fine-tuned on CS gets:
+All the results (Rouge1, Rouge2, RougeL, BertScore) are available in the results folder. As an example the model fine-tuned on CS gets:
 * Rouge1:    0.558
 * Rouge2:    0.382
 * RougeL:    0.501
