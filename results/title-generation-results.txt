@@ -1,88 +1,95 @@
 1st tuning on 10% of Misc dataset:
 - highlights only:
-    rouge1:     0.3528165143217968
-    rouge2:     0.16173788874253056
-    bertscore:  0.8790824067261483
+    F@rouge1:     0.3528165143217968
+    F@rouge2:     0.16173788874253056
+    F@bertscore:  0.8790824067261483
     
 - abstract only:
-    rouge1:     0.4031332265782636
-    rouge2:     0.21412242368394208
-    bertscore:  0.8864560142159462
+    F@rouge1:     0.4031332265782636
+    F@rouge2:     0.21412242368394208
+    F@bertscore:  0.8864560142159462
     
 - highlights + abstract:
-    rouge1:     0.4287032179064465    (BEST)
-    rouge2:     0.22869116935482947   (BEST)
-    bertscore:  0.8948401868343353    (BEST)
+    F@rouge1:     0.4287032179064465    (BEST)
+    F@rouge2:     0.22869116935482947   (BEST)
+    F@bertscore:  0.8948401868343353    (BEST)
 
 
 1st tuning on the entire Misc dataset with highlights and abstract (pietrocagnasso/bart-paper-titles):
-- Misc test:
-    rouge1: 0.45985199214408384
-    rouge2: 0.25561707946194806
-    bertscore: 0.8999845574661853
-
-- CS test:
-    rouge1: 0.5150226066785883
-    rouge2: 0.33377359547833396
-    bertscore: 0.9166437987486521
-    
 - AI test:
-    rouge1: 0.42712962400517124
-    rouge2: 0.21780651495394876
-    bertscore: 0.9044620539202834
+    F@rouge1: 0.42712962400517124
+    F@rouge2: 0.21780651495394876
+    F@rougel: 0.3525109698028923
+    F@bertscore: 0.9039090980182994
     
 - BIO test:
-    rouge1: 0.457578417466386
-    rouge2: 0.2521866035716397
-    bertscore: 0.898945746701003
+    F@rouge1: 0.457578417466386
+    F@rouge2: 0.2521866035716397
+    F@rougel: 0.39349969234213183
+    F@bertscore: 0.9020485300113721
+
+- CS test:
+    F@rouge1: 0.5150226066785883
+    F@rouge2: 0.33377359547833396
+    F@rougel: 0.45759759546610734
+    F@bertscore: 0.9170313517252604
+    
+    
+2nd tuning on AIPubSumm (pietrocagnasso/bart-paper-titles-ai):
+- AI test:
+    F@rouge1: 0.4332465576730597
+    F@rouge2: 0.22396533754801487
+    F@rougel: 0.36069016078755617
+    F@bertscore: 0.9064377690806533
+    
+- BIO test:
+    F@rouge1: 0.4547227529760554
+    F@rouge2: 0.24739079706315134
+    F@rougel: 0.3912057934599496
+    F@bertscore: 0.9013126286653781
+
+- CS test:
+    F@rouge1: 0.5228071241239294
+    F@rouge2: 0.3314013549744588
+    F@rougel: 0.46635252280229755
+    F@bertscore: 0.9186118094126383
+    
+    
+2nd tuning on BIOPubSumm (pietrocagnasso/bart-paper-titles-bio):
+- BIO test:
+    F@rouge1: 0.4597935871013843
+    F@rouge2: 0.25406085183816984
+    F@rougel: 0.3960679883100807
+    F@bertscore: 0.9027178855633647
+
+- AI test:
+    F@rouge1: 0.4445549197949771
+    F@rouge2: 0.23214337881024177
+    F@rougel: 0.35779253134862987
+    F@bertscore': 0.9072088246995752
+    
+- CS test:
+    F@rouge1: 0.4976860482380896
+    F@rouge2: 0.3077308420389538
+    F@rougel: 0.4337582539427195
+    F@bertscore: 0.9156100006898245
     
 
 2nd tuning on CSPubSumm (pietrocagnasso/bart-paper-titles-cs):
 - CS test:
-    rouge1: 0.5584201740488969
-    rouge2: 0.3817657754374963
-    bertscore: 0.9228167812029521
-    
-- AI test:
-    rouge1: 0.44824190908198736
-    rouge2: 0.2514686074631145
-    bertscore: 0.9087199595841494
-    
-- BIO test:
-    rouge1: 0.4534994667584432
-    rouge2: 0.24497967650307212
-    bertscore: 0.8985524293215301
-    
-    
-2nd tuning on BIOPubSumm (pietrocagnasso/bart-paper-titles-bio):
-- CS test:
-    rouge1: 0.4976860482380896
-    rouge2: 0.3077308420389538
-    bertscore: 0.9167378294467926
-    
-- AI test:
-    rouge1: 0.4445549197949771
-    rouge2: 0.23214337881024177
-    bertscore: 0.9080593757557146
-    
-- BIO test:
-    rouge1: 0.4597935871013843
-    rouge2: 0.25406085183816984
-    bertscore: 0.9006350871133981
-    
+    F@rouge1: 0.5584201740488969
+    F@rouge2: 0.3817657754374963
+    F@rougel: 0.501169632070814
+    F@bertscore: 0.9232878923416138
 
-2nd tuning on AIPubSumm (pietrocagnasso/bart-paper-titles-ai):
-- CS test:
-    rouge1: 0.5228071241239294
-    rouge2: 0.3314013549744588
-    bertscore: 0.9172684196631113
-    
 - AI test:
-    rouge1: 0.4332465576730597
-    rouge2: 0.22396533754801487
-    bertscore: 0.904642644253644
+    F@rouge1: 0.44824190908198736
+    F@rouge2: 0.2514686074631145
+    F@rougel: 0.3732645051867477
+    F@bertscore: 0.907742623126868
     
 - BIO test:
-    rouge1: 0.4547227529760554
-    rouge2: 0.24739079706315134
-    bertscore: 0.897325964067062
+    F@rouge1: 0.4534994667584432
+    F@rouge2: 0.24497967650307212
+    F@rougel: 0.3861405892250704
+    F@bertscore: 0.9012335716348598
