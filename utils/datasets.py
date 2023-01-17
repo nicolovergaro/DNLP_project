@@ -213,7 +213,7 @@ class PCEDataset(Dataset):
               )
         
         if self.inference:
-            return {"input_ids": x["input_ids"][0], "attention_mask": x["attention_mask"][0], "pid": selx.papers_id[index]}
+            return {"input_ids": x["input_ids"][0], "attention_mask": x["attention_mask"][0], "pid": self.papers_id[index]}
         else:
             return {"input_ids": x["input_ids"][0], "attention_mask": x["attention_mask"][0], "labels": self.y[index]}
 
