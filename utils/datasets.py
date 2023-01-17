@@ -1,7 +1,6 @@
 import json
 import evaluate
 import numpy as np
-from tqdm import tqdm
 from rouge import Rouge
 from nltk.tokenize import sent_tokenize
 from torch.utils.data import Dataset
@@ -175,7 +174,7 @@ class PCEDataset(Dataset):
             data = json.load(f)
 
             # for each paper
-            for paper in tqdm(data["papers"]):
+            for paper in data["papers"]:
                 context = dict()
                 # compute section contriution in the context
                 for sec in contrib.keys():
