@@ -2,12 +2,17 @@ import json
 from torch.utils.data import Dataset
 from rouge import Rouge
 from nltk.tokenize import sent_tokenize
-
-rg = Rouge()
+import evaluate
+import numpy as np
 
 
 class TitleGenDataset(Dataset):
-    def __init__(self, json_file, tokenizer, max_input_length=1024, max_target_length=128, use_highlights=True, use_abstract=True, inference=False):
+    def __init__(self, json_file, tokenizer,
+                    max_input_length=1024,
+                    max_target_length=128,
+                    use_highlights=True,
+                    use_abstract=True,
+                    inference=False):
         """
         Dataset class for the title generation task.
         
@@ -57,7 +62,7 @@ class TitleGenDataset(Dataset):
                 self.targets.append(paper["title"])
 
     def __getitem__(self, index):
-        # compute encodings for the input and the output
+        # compute encodings for the input
         x = self.tokenizer.encode_plus(self.inputs[index],
                   padding="max_length",
                   max_length=self.max_input_length,
@@ -69,6 +74,7 @@ class TitleGenDataset(Dataset):
         if self.inference:
             return {"input_ids": x["input_ids"][0], "attention_mask": x["attention_mask"][0]}
         else:
+            # compute the encoding for the output
             y = self.tokenizer.encode_plus(self.targets[index],
                       padding="max_length",
                       max_length=self.max_target_length,
@@ -82,9 +88,54 @@ class TitleGenDataset(Dataset):
 
     
 class PCEDataset(Dataset):
-    def __init__(self, papers_file, contributions_file, probabilities_file, tokenizer, topic, n_enrichments=5, strategy=None):
+    def __init__(self, papers_file,
+                    tokenizer,
+                    contributions_file,
+                    probabilities_file, 
+                    topic, 
+                    n_sentences=10, 
+                    strategy=None,
+                    inference=False):
         """
-        Dataset class used for Probabilisti context enrichment task.
+        Dataset class used for Probabilistic context extraction task.
+        The JSON files are expected in the following formats:
+        papers_file:
+        {
+            "papers": {
+                "<paper id>": {
+                    "id": "<paper id>",
+                    "abstract": ["<sentence>", ...],
+                    "introduction": ["<sentence>", ...],
+                    "methods": ["<sentence>", ...],
+                    "results": ["<sentence>", ...],
+                    "discussion": ["<sentence>", ...],
+                    "highlights": ["<highlight>"]
+                },
+                ...
+            }
+        }
+        contribution_file:
+        {
+            "<topic>": {
+                "abstract": <float>,  // these floats must sum up to 1
+                "introduction": <float>,
+                "methods": <float>,
+                "results": <float>,
+                "discussion": <float>,
+            },
+            ...
+        }
+        probabilites_file:
+        {
+            "<topic>": {
+                "abstract": [<float>, ...],  // the floats in each list must sum up to 1
+                "introduction": [<float>, ...],
+                "methods": [<float>, ...],
+                "results": [<float>, ...],
+                "discussion": [<float>, ...],
+            },
+            ...
+        }
         
         Parameters:
             papers_file: JSON file containing the papers
@@ -100,92 +151,117 @@ class PCEDataset(Dataset):
         self.x = []
         self.contexts = []
         self.y = []
+        self.inference = inference
 
-        # read topic stats
-        if topic not in ["CS", "AI", "BIO"]:
-            print("ERROR: unkonwn topic. Try with CS, AI or BIO.")
-            raise ValueError
+        rg = Rouge(metrics=['rouge-n'], limit_length=False, max_n=2, alpha=0.5, stemming=False, apply_best=True, apply_avg=False)
 
-        # read the contributions file and get contributions for the topic
+        # check for errors in topic selection
+        if topic not in ["AI", "BIO", "CS"]:
+            print("ERROR: unknown topic. Try with AI, BIO or CS.")
+            return
+
+        # read contributions and probabilities file and extract the values useful for the specified topic
         with open(contributions_file) as f:
             contributions = json.load(f)
-        cntrbs = {sec: round(contributions[topic][sec] * n_enrichments) for sec in contributions[topic]}
+        contrib = {k: round(n_sentences*v) for k, v in contributions[topic].items()}
 
-        # read the probabilities file and get probabilities for the topic
         with open(probabilities_file) as f:
             probabilities = json.load(f)
-        p = probabilities[topic]
+        prob = probabilities[topic]
 
-        # read data from the file
+        # read data and build the dataset
         with open(papers_file) as f:
             data = json.load(f)
 
-            for i, paper in enumerate(tqdm(data["papers"])):
+            # for each paper
+            for paper in tqdm(data["papers"]):
+                context = dict()
+                # compute section contriution in the context
+                for sec in contrib.keys():
+                    context[sec] = PCEDataset.select_sentences(paper, sec, prob[sec], contrib[sec], strategy)
                 # compose the context
-                context = paper["ABSTRACT"] + f" {tokenizer.sep_token} "
-                for sec in cntrbs:
-                    # find and add the enrichments to the context
-                    context += f" {tokenizer.sep_token} ".join(PCEDataset.select_enrichments(paper, sec, p[sec], cntrbs[sec], strategy))
+                context = f" {tokenizer.sep_token} ".join([v for v in context.values()])
 
-                # construct the dataset
-                for sent in sent_tokenize(paper["FULL_TEXT"]):
-                    try:
-                        # compute the rouge 2 f-score, the target of the regression
-                        scores = rg.get_scores([sent] * len(paper["HIGHLIGHTS"]), paper["HIGHLIGHTS"])
-                        r2f = [s["rouge-2"]["f"] for s in scores]
+                # for each section
+                for sec in contrib.keys():
+                    # for each sentence in the section
+                    for sent in paper[sec]:
+                        try:
+                            if not inference:
+                                # compute the rouge-2 f
+                                r2f = rg.get_scores(sent, paper["highlights"])["rouge-2"]["f"]                            
+                                self.y.append(r2f)
+                            
+                            self.x.append(sent)
+                            self.contexts.append(context)
+                        except:
+                            pass
+                        
 
-                        self.x.append(f"{self.tokenizer.cls_token} " + sent)
-                        self.contexts.append(context)
-                        self.y.append(max(r2f))
-                    except: pass
-
-
-    def __getitem__(self, i):
-        out = self.tokenizer.encode_plus(self.x[i],
-                                        self.contexts[i],
-                                        padding="max_length",
-                                        max_length=512,
-                                        truncation=True,
-                                        return_attention_mask=True,
-                                        return_tensors='pt',
-                                        return_token_type_ids=True)
+    def __getitem__(self, index):
+        # compute encodings for the input
+        x = self.tokenizer.encode_plus(self.x[index],
+                  self.contexts[index],
+                  padding="max_length",
+                  truncation=True,
+                  return_attention_mask=True,
+                  return_tensors='pt'
+              )
         
-        return {"input_ids": out["input_ids"][0], "attention_mask": out["attention_mask"][0], "labels": self.y[i]}
+        if self.inference:
+            return {"input_ids": x["input_ids"][0], "attention_mask": x["attention_mask"][0]}
+        else:
+            return {"input_ids": x["input_ids"][0], "attention_mask": x["attention_mask"][0], "labels": self.y[index]}
+
 
     def __len__(self):
         return len(self.x)
 
+    
     @staticmethod
-    def select_enrichments(paper, section, p, cntrb, strategy):
+    def select_sentences(paper,
+                         section,
+                         prob, 
+                         n_sents, 
+                         strategy=None):
         """
-        Method to probabilistically extract the enrichments.
+        Method to select the sentences that will compose the context.
         
         Parameters:
-            paper: the paper on which we are working
-            section: section from which we are going to extract the enrichments (introduction, methods, results and discussion)
-            p: bins probability
-            cntrb: number of enrichment to be extracted
-            strategy: strategy to choose among sentence in the same bin (TO BE IMPLEMENTED)
+            paper: dictionary with the sections composing the paper
+            section: section from which we want to extract the sentences
+            prob: probability distribution across 20 bins
+            n_sents: number of sentences that will be extracted
+            strategy: strategy followed to extract the sentences (None or "abstract")
         """
-        
-        chosen = []  #chosen enrichments
-        sentences = sent_tokenize(paper[section.upper()])  # section sentences
-        if len(sentences) == 0 or cntrb == 0:
-            return []
+        # if empty return an empty string
+        if len(paper[section]) == 0 or n_sents == 0:
+            return ""
+
+        # if it requires more sentence than available return the entire section
+        if n_sents > len(paper[section]):
+            return " ".join(paper["section"])
+
+        # the selection strategy can be based on the semantic similarity with the abstract
+        if strategy == "abstract":
+            abstract = " ".join(paper["abstract"])
+            bs = evaluate.load("bertscore")
+
+        chosen = []
 
         # compute the number of sentences covered by each bin
         sent_per_bin = []
         bounds_per_bin = []
         while len(sent_per_bin) < len(p):
-            lb = int((1 / len(p)) * len(sent_per_bin) * len(sentences)) # index lower bound
-            ub = min(int((1 / len(p)) * (len(sent_per_bin) + 1) * len(sentences)), len(sentences)) - 1 # index upper bound
+            lb = int((1 / len(p)) * len(sent_per_bin) * len(paper[section])) # index lower bound
+            ub = min(int((1 / len(p)) * (len(sent_per_bin) + 1) * len(paper[section])), len(paper[section])) - 1 # index upper bound
             bounds_per_bin.append((lb, ub))
             sent_per_bin.append(ub - lb + 1)
         # extract bins until they are compatible with the availability of sentences in each bin
         while True:
             flag = True
             # extract the bins from which we will select the sentences
-            bins = np.random.choice(range(len(p)), cntrb, p=p)
+            bins = np.random.choice(range(len(prob)), n_sents, p=prob)
             # count repeptitions of each element
             reps = np.bincount(bins)
             for max_n, n in zip(sent_per_bin, reps):
@@ -194,19 +270,26 @@ class PCEDataset(Dataset):
                     flag = False
             if flag:
                 break
-        
-        while len(chosen) < cntrb:
+
+        # choose the sentences
+        while len(chosen) < n_sents:
             # get bins lower and upper bound in index
             lb, ub = bounds_per_bin[bins[len(chosen)]]
             # extract the index
             if strategy == None:
+                # if no strategy was chosen choose at random in the bin
                 ix = np.random.choice(range(lb, ub+1))
-            else:
-                print("Warning: use None as strategy")
-                raise ValueError
+            elif strategy == "abstract":
+                # compute the bertscore wrt the abstract, choose in order the best sentences
+                bsf = bs.compute(paper[section][lb:ub+1], [abstract]*len(ub - lb + 1))["f1"]
+                ixs = np.argsort(bsf)[::-1]
+                for ix in ixs:
+                    if ix not in chosen:
+                        break
+                ix += lb
             
-            if ix not in chosen and len(sentences[ix]) > 10:
+            if ix not in chosen:
                 chosen.append(ix)
-                
-        chosen = [sentences[ix] for ix in chosen]
-        return chosen
+
+        chosen.sort()
+        return " ".join([paper[section][i] for i in chosen])
