@@ -1,6 +1,7 @@
 import json
 import evaluate
 import numpy as np
+from tqdm import tqdm
 from rouge import Rouge
 from nltk.tokenize import sent_tokenize
 from torch.utils.data import Dataset
@@ -86,7 +87,7 @@ class TitleGenDataset(Dataset):
     def __len__(self):
         return len(self.inputs)
 
-    
+
 class PCEDataset(Dataset):
     def __init__(self, papers_file,
                     tokenizer,
@@ -149,6 +150,7 @@ class PCEDataset(Dataset):
         
         self.tokenizer = tokenizer
         self.x = []
+        self.papers_id = []
         self.contexts = []
         self.y = []
         self.inference = inference
@@ -174,7 +176,7 @@ class PCEDataset(Dataset):
             data = json.load(f)
 
             # for each paper
-            for paper in data["papers"]:
+            for paper in tqdm(data["papers"].values()):
                 context = dict()
                 # compute section contriution in the context
                 for sec in contrib.keys():
@@ -194,6 +196,7 @@ class PCEDataset(Dataset):
                             
                             self.x.append(sent)
                             self.contexts.append(context)
+                            self.papers_id.append(paper["id"])
                         except:
                             pass
                         
@@ -204,12 +207,13 @@ class PCEDataset(Dataset):
                   self.contexts[index],
                   padding="max_length",
                   truncation=True,
+                  max_length=512,
                   return_attention_mask=True,
                   return_tensors='pt'
               )
         
         if self.inference:
-            return {"input_ids": x["input_ids"][0], "attention_mask": x["attention_mask"][0]}
+            return {"input_ids": x["input_ids"][0], "attention_mask": x["attention_mask"][0], "pid": selx.papers_id[index]}
         else:
             return {"input_ids": x["input_ids"][0], "attention_mask": x["attention_mask"][0], "labels": self.y[index]}
 
@@ -234,27 +238,29 @@ class PCEDataset(Dataset):
             n_sents: number of sentences that will be extracted
             strategy: strategy followed to extract the sentences (None or "abstract")
         """
+        
         # if empty return an empty string
         if len(paper[section]) == 0 or n_sents == 0:
             return ""
 
         # if it requires more sentence than available return the entire section
         if n_sents > len(paper[section]):
-            return " ".join(paper["section"])
+            return " ".join(paper[section])
 
         # the selection strategy can be based on the semantic similarity with the abstract
         if strategy == "abstract":
             abstract = " ".join(paper["abstract"])
             bs = evaluate.load("bertscore")
+            bsf = bs.compute(predictions=paper[section], references=[abstract]*len(paper[section]), lang="en")["f1"]
 
         chosen = []
 
         # compute the number of sentences covered by each bin
         sent_per_bin = []
         bounds_per_bin = []
-        while len(sent_per_bin) < len(p):
-            lb = int((1 / len(p)) * len(sent_per_bin) * len(paper[section])) # index lower bound
-            ub = min(int((1 / len(p)) * (len(sent_per_bin) + 1) * len(paper[section])), len(paper[section])) - 1 # index upper bound
+        while len(sent_per_bin) < len(prob):
+            lb = int((1 / len(prob)) * len(sent_per_bin) * len(paper[section])) # index lower bound
+            ub = min(int((1 / len(prob)) * (len(sent_per_bin) + 1) * len(paper[section])), len(paper[section])) - 1 # index upper bound
             bounds_per_bin.append((lb, ub))
             sent_per_bin.append(ub - lb + 1)
         # extract bins until they are compatible with the availability of sentences in each bin
@@ -281,8 +287,7 @@ class PCEDataset(Dataset):
                 ix = np.random.choice(range(lb, ub+1))
             elif strategy == "abstract":
                 # compute the bertscore wrt the abstract, choose in order the best sentences
-                bsf = bs.compute(paper[section][lb:ub+1], [abstract]*len(ub - lb + 1))["f1"]
-                ixs = np.argsort(bsf)[::-1]
+                ixs = np.argsort(bsf[lb:ub+1])[::-1]
                 for ix in ixs:
                     if ix not in chosen:
                         break
