@@ -1,21 +1,32 @@
 import json
-import evaluate
 import numpy as np
 from tqdm import tqdm
 from rouge import Rouge
-from nltk.tokenize import sent_tokenize
+from collections import defaultdict
 from torch.utils.data import Dataset
 
 
 class TitleGenDataset(Dataset):
-    def __init__(self, json_file, tokenizer,
-                    max_input_length=1024,
-                    max_target_length=128,
-                    use_highlights=True,
-                    use_abstract=True,
-                    inference=False):
+    def __init__(self,
+                 json_file,
+                 tokenizer,
+                 max_input_length=1024,
+                 max_target_length=128,
+                 use_highlights=True,
+                 use_abstract=True,
+                 inference=False
+                 ):
         """
-        Dataset class for the title generation task.
+        Dataset class for the title generation task. The expected file is a JSON structured as 
+        follows:
+        {
+            "paper_id": {
+                "highlights": [<string>, ...],
+                "abstract": <string>,
+                "title": <string>
+            },
+            ...
+        }
         
         Parameters:
             json_file: path to a file containing the dataset
@@ -65,236 +76,248 @@ class TitleGenDataset(Dataset):
     def __getitem__(self, index):
         # compute encodings for the input
         x = self.tokenizer.encode_plus(self.inputs[index],
-                  padding="max_length",
-                  max_length=self.max_input_length,
-                  truncation=True,
-                  return_attention_mask=True,
-                  return_tensors='pt'
-              )
+                                       padding="max_length",
+                                       max_length=self.max_input_length,
+                                       truncation=True,
+                                       return_attention_mask=True,
+                                       return_tensors='pt')
         
         if self.inference:
-            return {"input_ids": x["input_ids"][0], "attention_mask": x["attention_mask"][0]}
+            return {"input_ids": x["input_ids"][0], 
+                    "attention_mask": x["attention_mask"][0]}
         else:
             # compute the encoding for the output
             y = self.tokenizer.encode_plus(self.targets[index],
-                      padding="max_length",
-                      max_length=self.max_target_length,
-                      truncation=True,
-                      return_tensors='pt'
-                  )
-            return {"input_ids": x["input_ids"][0], "attention_mask": x["attention_mask"][0], "labels": y["input_ids"][0]}
+                                           padding="max_length",
+                                           max_length=self.max_target_length,
+                                           truncation=True,
+                                           return_tensors='pt')
+            return {"input_ids": x["input_ids"][0], 
+                    "attention_mask": x["attention_mask"][0], 
+                    "labels": y["input_ids"][0]}
 
     def __len__(self):
         return len(self.inputs)
 
 
 class PCEDataset(Dataset):
-    def __init__(self, papers_file,
-                    tokenizer,
-                    contributions_file,
-                    probabilities_file, 
-                    topic, 
-                    n_sentences=10, 
-                    strategy=None,
-                    inference=False):
+    def __init__(self, 
+                 file, 
+                 contributions_file, 
+                 distributions_file, 
+                 topic, 
+                 tokenizer,
+                 context_length=15,
+                 policy="random",
+                 sep_by_sent=True,
+                 for_inference=False,
+                 seed=None
+                ):
         """
-        Dataset class used for Probabilistic context extraction task.
-        The JSON files are expected in the following formats:
-        papers_file:
+        Dataset class to build datasets compatible with the Probabilistic Context Extraction method.
+        The expected input file is a JSON structured as follows:
         {
-            "papers": {
-                "<paper id>": {
-                    "id": "<paper id>",
-                    "abstract": ["<sentence>", ...],
-                    "introduction": ["<sentence>", ...],
-                    "methods": ["<sentence>", ...],
-                    "results": ["<sentence>", ...],
-                    "discussion": ["<sentence>", ...],
-                    "highlights": ["<highlight>"]
+            "paper_id": {
+                "highlights": [<string>, ...],
+                "abstract": <string>,
+                "sections": {
+                    "abstract": [<string>, ...],
+                    "introduction": [<string>, ...],
+                    "methods": [<string>, ...],
+                    "results": [<string>, ...],
+                    "discussion": [<string>, ...]
                 },
-                ...
-            }
-        }
-        contribution_file:
-        {
-            "<topic>": {
-                "abstract": <float>,  // these floats must sum up to 1
-                "introduction": <float>,
-                "methods": <float>,
-                "results": <float>,
-                "discussion": <float>,
+                "rouges": {
+                    "abstract": [<float>, ...],
+                    "introduction": [<float>, ...],
+                    "methods": [<float>, ...],
+                    "results": [<float>, ...],
+                    "discussion": [<float>, ...]
+                }
             },
             ...
         }
-        probabilites_file:
+        The field rouges is mandatory only for training sets (for_inference=False), it contains the 
+        highest Rouge-2 of the corresponding sentence wrt an highlight.
+        The contributions file is expected to follow this structure:
         {
-            "<topic>": {
-                "abstract": [<float>, ...],  // the floats in each list must sum up to 1
+            "topic": {
+                "abstract": <float>,
+                "introduction": <float>,
+                "methods: <float>,
+                "results": <float>,
+                "discussion": <float>
+            },
+            ...
+        }
+        and the distributions file is expected to follow this structure:
+        {
+            "topic": {
+                "abstract": [<float>, ...],
                 "introduction": [<float>, ...],
                 "methods": [<float>, ...],
                 "results": [<float>, ...],
-                "discussion": [<float>, ...],
+                "discussion": [<float>, ...]
             },
             ...
         }
         
         Parameters:
-            papers_file: JSON file containing the papers
-            contribution_file: JSON file containing the section contribution pre each topic
-            probabilities_file: JSON file with the probability to fall in a certain bin
-            tokenizer: tokenizer chosen for the task
-            topic: topic of the papers (CS, AI, BIO)
-            n_enrichments: number of sentences to be added to the context
-            strategy: choice strategy of the sentence inside the bin
+            file: path to the JSON file containing the dataset
+            contributions_file: path to the JSON file with the contributions of each section
+            distributions_file: path to the JSON file with the distributions of each section
+            topic: the topic of the papers in the dataset ("AI", "BIO", "CS")
+            tokenizer: chosen tokenizer for the task
+            context_length: number of sentences to compose the dataset
+            policy: the in-bin choice strategy ("random", "rouge-2", "best")
+            sep_by_sent: flag to decide whether or not to separate each sentence
+            for_inference: flag to decide if the dataset is for inference
+            seed: seed for reproducibility of the dataset
         """
         
         self.tokenizer = tokenizer
+        self.for_inference = for_inference
+        
         self.x = []
-        self.papers_id = []
-        self.contexts = []
+        self.contexts = dict()
         self.y = []
-        self.inference = inference
-
-        rg = Rouge(metrics=['rouge-n'], limit_length=False, max_n=2, alpha=0.5, stemming=False, apply_best=True, apply_avg=False)
-
-        # check for errors in topic selection
-        if topic not in ["AI", "BIO", "CS"]:
-            print("ERROR: unknown topic. Try with AI, BIO or CS.")
-            return
-
-        # read contributions and probabilities file and extract the values useful for the specified topic
+        self.highlights = dict()
+        self.paper_ids = []
+        
+        # read the dataset
+        with open(file) as f:
+            data = json.load(f)
+                    
+        # compute relative positions the top n sentences, normalized rouge-2 wise
+        with open(distributions_file) as f:
+            distributions = json.load(f)
+        distributions = distributions[topic]
+                
+        # compute section contributions
         with open(contributions_file) as f:
             contributions = json.load(f)
-        contrib = {k: round(n_sentences*v) for k, v in contributions[topic].items()}
-
-        with open(probabilities_file) as f:
-            probabilities = json.load(f)
-        prob = probabilities[topic]
-
-        # read data and build the dataset
-        with open(papers_file) as f:
-            data = json.load(f)
-
-            # for each paper
-            for paper in tqdm(data["papers"].values()):
-                context = dict()
-                # compute section contriution in the context
-                for sec in contrib.keys():
-                    context[sec] = PCEDataset.select_sentences(paper, sec, prob[sec], contrib[sec], strategy)
-                # compose the context
-                context = f" {tokenizer.sep_token} ".join([v for v in context.values()])
-
-                # for each section
-                for sec in contrib.keys():
-                    # for each sentence in the section
-                    for sent in paper[sec]:
-                        try:
-                            if not inference:
-                                # compute the rouge-2 f
-                                r2f = rg.get_scores(sent, paper["highlights"])["rouge-2"]["f"]                            
-                                self.y.append(r2f)
-                            
-                            self.x.append(sent)
-                            self.contexts.append(context)
-                            self.papers_id.append(paper["id"])
-                        except:
-                            pass
+        contributions = contributions[topic]
+        contributions = {sec: round(context_length * pcg) for sec, pcg in contributions.items()}
+    
+        # reproducibility   
+        if seed is not None:
+            np.random.seed(seed)        
+        
+        # compose the dataset
+        for pid in tqdm(data.keys()):            
+            self.highlights[pid] = data[pid]["highlights"]
+            
+            # compose the context
+            context = ""
+            for sec in ["abstract", "introduction", "methods", "results", "discussion"]:
+                if sec in list(data[pid]["sections"].keys()):
+                    sents = PCEDataset.extract_sentences(sents=data[pid]["sections"][sec],
+                                                         n=contributions[sec],
+                                                         probabilities=distributions[sec],
+                                                         policy=policy,
+                                                         abstract=data[pid]["abstract"])
+                    if len(sents) > 0:
+                        if len(context) > 0:
+                            context += f" {self.tokenizer.sep_token} "
+                        if sep_by_sent:
+                            context += f" {self.tokenizer.sep_token} ".join(sents)
+                        else:
+                            context += " ".join(sents)
+            self.contexts[pid] = context
+            
+            # build sentence and targets lists
+            for sec in data[pid]["sections"].keys():
+                if sec != "abstract":
+                    for i, sent in enumerate(data[pid]["sections"][sec]):
+                        self.paper_ids.append(pid)
+                        self.x.append(sent)
+                        if not self.for_inference:
+                            self.y.append(data[pid]["rouges"][sec][i])           
                         
-
     def __getitem__(self, index):
         # compute encodings for the input
         x = self.tokenizer.encode_plus(self.x[index],
-                  self.contexts[index],
-                  padding="max_length",
-                  truncation=True,
-                  max_length=512,
-                  return_attention_mask=True,
-                  return_tensors='pt'
-              )
+                                       self.contexts[self.paper_ids[index]],
+                                       padding="max_length",
+                                       truncation=True,
+                                       max_length=384,
+                                       return_attention_mask=True,
+                                       return_tensors='pt')
         
-        if self.inference:
-            return {"input_ids": x["input_ids"][0], "attention_mask": x["attention_mask"][0], "pid": self.papers_id[index]}
+        if self.for_inference:
+            return {"input_ids": x["input_ids"][0],
+                    "attention_mask": x["attention_mask"][0]}
         else:
-            return {"input_ids": x["input_ids"][0], "attention_mask": x["attention_mask"][0], "labels": self.y[index]}
-
-
+            return {"input_ids": x["input_ids"][0],
+                    "attention_mask": x["attention_mask"][0],
+                    "labels": self.y[index]}
+        
     def __len__(self):
         return len(self.x)
-
     
-    @staticmethod
-    def select_sentences(paper,
-                         section,
-                         prob, 
-                         n_sents, 
-                         strategy=None):
-        """
-        Method to select the sentences that will compose the context.
-        
-        Parameters:
-            paper: dictionary with the sections composing the paper
-            section: section from which we want to extract the sentences
-            prob: probability distribution across 20 bins
-            n_sents: number of sentences that will be extracted
-            strategy: strategy followed to extract the sentences (None or "abstract")
-        """
-        
-        # if empty return an empty string
-        if len(paper[section]) == 0 or n_sents == 0:
-            return ""
-
-        # if it requires more sentence than available return the entire section
-        if n_sents > len(paper[section]):
-            return " ".join(paper[section])
-
-        # the selection strategy can be based on the semantic similarity with the abstract
-        if strategy == "abstract":
-            abstract = " ".join(paper["abstract"])
-            bs = evaluate.load("bertscore")
-            bsf = bs.compute(predictions=paper[section], references=[abstract]*len(paper[section]), lang="en")["f1"]
-
-        chosen = []
-
-        # compute the number of sentences covered by each bin
-        sent_per_bin = []
-        bounds_per_bin = []
-        while len(sent_per_bin) < len(prob):
-            lb = int((1 / len(prob)) * len(sent_per_bin) * len(paper[section])) # index lower bound
-            ub = min(int((1 / len(prob)) * (len(sent_per_bin) + 1) * len(paper[section])), len(paper[section])) - 1 # index upper bound
-            bounds_per_bin.append((lb, ub))
-            sent_per_bin.append(ub - lb + 1)
-        # extract bins until they are compatible with the availability of sentences in each bin
-        while True:
-            flag = True
-            # extract the bins from which we will select the sentences
-            bins = np.random.choice(range(len(prob)), n_sents, p=prob)
-            # count repeptitions of each element
-            reps = np.bincount(bins)
-            for max_n, n in zip(sent_per_bin, reps):
-                # check that the repetitions don't overcome the length of each bin
-                if n > max_n:
-                    flag = False
-            if flag:
-                break
-
-        # choose the sentences
-        while len(chosen) < n_sents:
-            # get bins lower and upper bound in index
-            lb, ub = bounds_per_bin[bins[len(chosen)]]
-            # extract the index
-            if strategy == None:
-                # if no strategy was chosen choose at random in the bin
-                ix = np.random.choice(range(lb, ub+1))
-            elif strategy == "abstract":
-                # compute the bertscore wrt the abstract, choose in order the best sentences
-                ixs = np.argsort(bsf[lb:ub+1])[::-1]
-                for ix in ixs:
-                    if ix not in chosen:
-                        break
-                ix += lb
+    def get_highlights(self):
+        return self.highlights
+    
+    def extract_sentences(sents, n, probabilities, policy, abstract=None):
+        if policy not in ["random", "rouge-2", "best"]:
+            raise ValueError("The policy you chose is not supported. Try with 'random', 'rouge-2' or 'best'.")
             
-            if ix not in chosen:
-                chosen.append(ix)
-
-        chosen.sort()
-        return " ".join([paper[section][i] for i in chosen])
+        # trivial case
+        if len(sents) <= n:
+            return sents
+        
+        if policy in ["rouge-2", "best"]:
+            rg = Rouge(metrics=["rouge-n"], limit_length=False, max_n=2, alpha=0.5, stemming=False)
+            rouges = []
+            # compute rouge-2 F of each sentence wrt the abstract
+            for sent in sents:
+                rouges.append(rg.get_scores(sent, abstract)["rouge-2"]["f"])
+            rouges = np.array(rouges)
+        
+        # get bins
+        n_bins = len(probabilities)
+        bins = PCEDataset.define_bins(len(sents), n_bins)
+        
+        # one sentence per bin
+        if len(sents) == n_bins:
+            selected = np.argsort(probabilities)[::-1][:n]
+        # more than one sentence per bin
+        elif policy == "best":
+            # return the n sentences with higher rouge
+            selected = np.argsort(rouges)[::-1][:n]
+        else:
+            if policy == "rouge-2":
+                # sort the sentences in the bin according to their rouge
+                for b, ixs in bins.items():
+                    rgs = rouges[ixs]
+                    args = np.argsort(rgs)[::-1]
+                    bins[b] = [ixs[i] for i in args]
+                    
+            selected = []
+            while len(selected) < n:
+                # select a bin according to the probabilities
+                sel_bin = np.random.choice(n_bins, p=probabilities)
+                if len(bins[sel_bin]) > 0:
+                    # select a sentence in the bin according to the policy
+                    if policy == "random":
+                        ix = np.random.choice(len(bins[sel_bin]))
+                        if len(sents[ix]) > 1:
+                            selected.append(bins[sel_bin][ix])
+                        del bins[sel_bin][ix]
+                    else:
+                        if len(sents[bins[sel_bin][0]]) > 1:
+                            selected.append(bins[sel_bin][0])
+                        del bins[sel_bin][0]
+                        
+        # reorder the selected sentences according to the appearance order in the original text
+        sorted(selected)
+        return [sents[i] for i in selected]
+    
+    def define_bins(length, n_bins):
+        # create a map between the bins and the sentences
+        bin_length = length / n_bins
+        pos_bin_mapping = {i: int(i / bin_length) for i in range(length)}
+        bin_pos_mapping = defaultdict(lambda: [])
+        for pos, curr_bin in pos_bin_mapping.items():
+            bin_pos_mapping[curr_bin].append(pos)
+        return bin_pos_mapping

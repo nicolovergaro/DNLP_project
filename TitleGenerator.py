@@ -13,8 +13,6 @@ from transformers import BartForConditionalGeneration, AutoTokenizer, TrainingAr
 from utils.reproducibility import *
 from utils.datasets import TitleGenDataset
 
-rg = Rouge()
-
 
 class TitleGenerator():
     def __init__(self, model_name="pietrocagnasso/bart-paper-titles"):
@@ -22,12 +20,12 @@ class TitleGenerator():
         The models we fine-tuned for this extensions are available on huggingface:
         - pietrocagnasso/bart-paper-titles: fine-tuned for 1 epoch on all the papers in CS, AI,
                 and BIO datasets
-        - pietrocagnasso/bart-paper-titles-cs: starting from the general one this model is
-                fine-tuned for an additional epoch on the CS dataset
-        - pietrocagnasso/bart-paper-titles-bio: starting from the general one this model is
-                fine-tuned for an additional epoch on the BIO dataset
         - pietrocagnasso/bart-paper-titles-ai: starting from the general one this model is
                 fine-tuned for an additional epoch on the AI dataset
+        - pietrocagnasso/bart-paper-titles-bio: starting from the general one this model is
+                fine-tuned for an additional epoch on the BIO dataset
+        - pietrocagnasso/bart-paper-titles-cs: starting from the general one this model is
+                fine-tuned for an additional epoch on the CS dataset
 
         Parameters:
             model_name: string with the name of the model to be used, by default it is the model
@@ -38,30 +36,23 @@ class TitleGenerator():
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
         self.model = BartForConditionalGeneration.from_pretrained(model_name).to(self.device)
 
-
     def train(self, train_ds_json, test_ds_json,
-                use_highlights=True,
-                use_abstract=True,
-                epochs=1,
-                per_device_batch_size=4,
-                n_gpus=1,
-                lr=5e-5,
-                weight_decay=1e-2,
-                model_output_dir="./best_model",
-                seed=None):
+              use_highlights=True,
+              use_abstract=True,
+              epochs=1,
+              per_device_batch_size=4,
+              n_gpus=1,
+              lr=5e-5,
+              weight_decay=1e-2,
+              model_output_dir="./best_model",
+              seed=None
+              ):
         """
-        This method can be used to tone a model starting from scratch or fine-tuning a pre-trained
+        This method can be used to tune a model starting from scratch or fine-tuning a pre-trained
         model. For more than 1 training epochs it will use an 80/20 split to define the evaluation
         set, otherwise it will use the test set.
-        Train and test sets are expected to be JSON files following this format:
-        {
-            "[ID]": {
-                "highlights": [<string>, ...],
-                "abstract": <string>,
-                "title": <string>
-            },
-            ...
-        }
+        Train and test sets are expected to be JSON files following the format required by
+        TitleGenDataset.
 
         Parameters:
             train_ds_json: path to a json file following the format described above
@@ -72,60 +63,53 @@ class TitleGenerator():
             lr: learning rate
             weight_decay: weight_decay
             model_output_dir: directory in which the best model should be saved
-            seed: seed for reproducibility purposes, if not specified the default one is 0
-                (take a look to utils.reproducibility)
+            seed: seed for reproducibility purposes (take a look to utils.reproducibility)
         """
 
         # reproducibility
         if seed is not None:
             make_it_reproducible(seed)
-        else:
-            make_it_reproducible()
 
         # build the datasets
         train_ds = TitleGenDataset(json_file=train_ds_json,
-                        tokenizer=self.tokenizer,
-                        use_highlights=use_highlights,
-                        use_abstract=use_abstract
-                    )
+                                   tokenizer=self.tokenizer,
+                                   use_highlights=use_highlights,
+                                   use_abstract=use_abstract)
         if epochs > 1:
             train_ds, eval_ds = random_split(train_ds,
-                                        [int(0.8 * len(train_ds)), len(train_ds) - int(0.8 * len(train_ds))]
-                                    )
+                                        [int(0.8 * len(train_ds)), 
+                                         len(train_ds) - int(0.8 * len(train_ds))])
 
         test_ds = TitleGenDataset(json_file=test_ds_json,
-                        tokenizer=self.tokenizer,
-                        use_highlights=use_highlights,
-                        use_abstract=use_abstract
-                    )
+                                  tokenizer=self.tokenizer,
+                                  use_highlights=use_highlights,
+                                  use_abstract=use_abstract)
         if epochs == 1:
             eval_ds = test_ds
 
         # define the training arguments
         training_args = TrainingArguments(output_dir="./results",
-                            num_train_epochs=epochs,
-                            per_device_train_batch_size=per_device_batch_size,
-                            per_device_eval_batch_size=per_device_batch_size,
-                            warmup_steps=0.1 * len(train_ds) / (per_device_batch_size * n_gpus),
-                            learning_rate=lr,
-                            weight_decay=weight_decay,
-                            logging_dir="./logs",
-                            logging_steps=100,
-                            evaluation_strategy="epoch",
-                            save_strategy="epoch",
-                            load_best_model_at_end=True,
-                            metric_for_best_model="bertscore",
-                            report_to="none"
-                        )
+                                          num_train_epochs=epochs,
+                                          per_device_train_batch_size=per_device_batch_size,
+                                          per_device_eval_batch_size=per_device_batch_size,
+                                          warmup_steps=0.1 * len(train_ds) / (per_device_batch_size * n_gpus),
+                                          learning_rate=lr,
+                                          weight_decay=weight_decay,
+                                          logging_dir="./logs",
+                                          logging_steps=100,
+                                          evaluation_strategy="epoch",
+                                          save_strategy="epoch",
+                                          load_best_model_at_end=True,
+                                          metric_for_best_model="bertscore",
+                                          report_to="none")
 
         # define the trainer
         trainer = Trainer(model=self.model,
-                        args=training_args,
-                        train_dataset=train_ds,
-                        eval_dataset=eval_ds,
-                        compute_metrics=self._compute_metric,
-                        preprocess_logits_for_metrics=self._preprocess_logits_for_metrics
-                    )
+                          args=training_args,
+                          train_dataset=train_ds,
+                          eval_dataset=eval_ds,
+                          compute_metrics=self._compute_metric,
+                          preprocess_logits_for_metrics=self._preprocess_logits_for_metrics)
 
         # start the training
         print("--- TRAIN THE MODEL ---")
@@ -154,10 +138,9 @@ class TitleGenerator():
 
             # predict and decode titles
             outs = self.model.generate(input_ids.to(self.device),
-                        num_beams=5,
-                        min_length=3,
-                        max_length=32
-                    )
+                                       num_beams=5,
+                                       min_length=3,
+                                       max_length=32)
             pred_titles = self.tokenizer.batch_decode(outs, skip_special_tokens=True)
 
             # compute and update metrics
@@ -166,9 +149,8 @@ class TitleGenerator():
             rouge2 += rg_out["rouge-2"]["f"] * len(pred_titles)
             rougel += rg_out["rouge-l"]["f"] * len(pred_titles)
             bs_res = bs.compute(predictions=pred_titles,
-                            references=real_titles,
-                            lang="en"
-                        )
+                                references=real_titles,
+                                lang="en")
             bertscore += sum(bs_res["f1"])
 
         # compute the average of the metrics
@@ -183,12 +165,12 @@ class TitleGenerator():
         F1@rougel: {rougel}
         F1@bertscore: {bertscore}""")
 
-
     def generate_title(self,
                        highlights=None,
                        abstract=None,
                        use_highlights=True,
-                       use_abstract=True):
+                       use_abstract=True
+                       ):
         """
         This method can be used to compute the title given the highlights and the abstract of a
         single paper.
@@ -223,29 +205,21 @@ class TitleGenerator():
 
         # predict the title
         outs = self.model.generate(input_ids.unsqueeze(dim=0).to(self.device),
-                        num_beams=5,
-                        min_length=3,
-                        max_length=32
-                    )
+                                   num_beams=5,
+                                   min_length=3,
+                                   max_length=32)
         pred_title = self.tokenizer.decode(outs[0], skip_special_tokens=True)
 
         return pred_title
 
-    
     def generate_titles(self, json_file,
                         use_highlights=True,
                         use_abstract=True,
-                        batch_size=8):
+                        batch_size=8
+                        ):
         """
         This method can be used to predict the titles for a set of paper. The papers have to passed
-        via a JSON file in the following format:
-        {
-            "[ID]": {
-                "highlights": [<string>, ...],
-                "abstract": <string>
-            },
-            ...
-        }
+        via a JSON file in the format required by TitleGenDataset.
 
         Parameters:
             json_file: the path to a JSON file following the format described above
@@ -272,10 +246,9 @@ class TitleGenerator():
 
             # predict and decode titles
             outs = self.model.generate(input_ids.to(self.device),
-                        num_beams=5,
-                        min_length=3,
-                        max_length=32
-                    )
+                                       num_beams=5,
+                                       min_length=3,
+                                       max_length=32)
             predictions = self.tokenizer.batch_decode(outs, skip_special_tokens=True)
 
             for title in predictions:
@@ -283,11 +256,11 @@ class TitleGenerator():
 
         return pred_titles
     
-    
     def evaluate_on_dataset(self, json_file,
-                           use_highlights=True,
-                           use_abstract=True,
-                           batch_size=8):
+                            use_highlights=True,
+                            use_abstract=True,
+                            batch_size=8
+                            ):
         """
         Methods that can be used to evaluate the metrics Rouge1, ROuge2, and BertScore for
         all the papers in a dataset.
@@ -314,14 +287,12 @@ class TitleGenerator():
         rouge2 = rg_out["rouge-2"]["f"]
         rougel = rg_out["rouge-l"]["f"]
         bs_res = bs.compute(predictions=predicted,
-                                        references=references,
-                                        lang="en"
-                                       )
+                            references=references,
+                            lang="en")
         bs = np.mean(bs_res["f1"])
         
         return {"F@rouge1": rouge1, "F@rouge2": rouge2, "F@rougel": rougel, "F@bertscore": bs}
-
-
+    
     def _preprocess_logits_for_metrics(self, logits, labels):
         """
         This method is used internally to preprocess the logits so that they enter the metric
@@ -335,7 +306,6 @@ class TitleGenerator():
         pred_ids = torch.argmax(logits[0], dim=-1)
         return pred_ids, labels
 
-    
     def _compute_metric(self, pred):
         """
         This method is used internally to compute some metric in the training phase to decide the
@@ -362,9 +332,8 @@ class TitleGenerator():
         #compute the metrics
         rg_out = rg.get_scores(pred_str, label_str)
         bs_res = bs.compute(predictions=pred_str,
-                        references=label_str,
-                        lang="en"
-                    )
+                            references=label_str,
+                            lang="en")
 
         return {"bertscore": round(np.mean(bs_res["f1"]), 4),
                     "R1": round(rg_out["rouge-1"]["f"], 4),

@@ -19,7 +19,7 @@ def make_it_reproducible(seed=SEED):
     
 def seed_worker(worker_id):
     worker_seed = torch.initial_seed() % 2**32
-    numpy.random.seed(worker_seed)
+    np.random.seed(worker_seed)
     random.seed(worker_seed)
     
 def get_generator(seed=SEED):
