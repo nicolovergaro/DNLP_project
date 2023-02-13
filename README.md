@@ -13,7 +13,7 @@ Thit first extension is a title generation task. The employed model is BART star
 | bpt-bio on BIOPubSumm |   0.4580   |   0.2541   |   0.3961   |    0.9027    |
 |  bpt-cs on CSPubSumm  |   0.5584   |   0.3818   |   0.5012   |    0.9233    |
 
-You can find our [ai](https://huggingface.co/pietrocagnasso/bart-paper-titles-ai), [bio](https://huggingface.co/pietrocagnasso/bart-paper-titles-bio), [cs](https://huggingface.co/pietrocagnasso/bart-paper-titles-cs) models on HuggingFace and see them in action in the demo we set up of [HF spaces](https://huggingface.co/spaces/pietrocagnasso/paper-title-generation).
+You can find our [ai](https://huggingface.co/pietrocagnasso/bart-paper-titles-ai), [bio](https://huggingface.co/pietrocagnasso/bart-paper-titles-bio), [cs](https://huggingface.co/pietrocagnasso/bart-paper-titles-cs) models on HuggingFace and see them in action in the demo we set up on [HF spaces](https://huggingface.co/spaces/pietrocagnasso/paper-title-generation).
 
 ## Second Extension
 The second extension is a Probabilistic Context Extraction aiming to improve the performance obtained by [THExt](https://www.sciencedirect.com/science/article/abs/pii/S0950705122006931) ([GitHub repo](https://github.com/MorenoLaQuatra/THExt)) changing the context.
@@ -24,4 +24,4 @@ The second extension is a Probabilistic Context Extraction aiming to improve the
 | PCE-best on BIOPubSumm |   0.3335   |   0.1222   |   0.3038   |
 |  PCE-best on CSPubSumm |   0.3738   |   0.1613   |   0.3443   |
 
-You can find our [ai](https://huggingface.co/pietrocagnasso/thext-pce-ai), [bio](https://huggingface.co/pietrocagnasso/thext-pce-bio), [cs](https://huggingface.co/pietrocagnasso/thext-pce-cs) models on HuggingFace and see them in action in the demo we set up of [HF spaces](https://huggingface.co/spaces/pietrocagnasso/paper-highlights-extraction).
+You can find our [ai](https://huggingface.co/pietrocagnasso/thext-pce-ai), [bio](https://huggingface.co/pietrocagnasso/thext-pce-bio), [cs](https://huggingface.co/pietrocagnasso/thext-pce-cs) models on HuggingFace and see them in action in the demo we set up on [HF spaces](https://huggingface.co/spaces/pietrocagnasso/paper-highlights-extraction).
