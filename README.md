@@ -7,7 +7,7 @@ Professor: Luca Cagliero, Moreno La Quatra.
 ## First extension
 Thit first extension is a title generation task. The employed model is BART starting from the pretrained version [distilbart](https://huggingface.co/sshleifer/distilbart-cnn-12-6). The input sequence is a concatenation of the highlights and the abstract of the paper via a SEP token.
 
-|               Dataset               | Rouge-1 F1 | Rouge-2 F1 | Rouge-L F1 | BERTScore F1 |
+|                                     | Rouge-1 F1 | Rouge-2 F1 | Rouge-L F1 | BERTScore F1 |
 |:-----------------------------------:|:----------:|:----------:|:----------:|:------------:|
 |  bart-paper-titels-ai on AIPubSumm  |   0.4332   |   0.2240   |   0.3607   |    0.9064    |
 | bart-paper-titles-bio on BIOPubSumm |   0.4580   |   0.2541   |   0.3961   |    0.9027    |
