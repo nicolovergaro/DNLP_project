@@ -7,13 +7,11 @@ Professor: Luca Cagliero, Moreno La Quatra.
 ## First extension
 Thit first extension is a title generation task. The employed model is BART starting from the pretrained version [distilbart](https://huggingface.co/sshleifer/distilbart-cnn-12-6). The input sequence is a concatenation of the highlights and the abstract of the paper via a SEP token.
 
-All the results (Rouge1, Rouge2, RougeL, BertScore) are available in the results folder. As an example the model fine-tuned on CS gets:
-* Rouge1:    0.558
-* Rouge2:    0.382
-* RougeL:    0.501
-* BertScore: 0.923
-
-on the papers in the CSPubSumm.
+|               Dataset               | Rouge-1 F1 | Rouge-2 F1 | Rouge-L F1 | BERTScore F1 |
+|:-----------------------------------:|:----------:|:----------:|:----------:|:------------:|
+|  bart-paper-titels-ai on AIPubSumm  |   0.4332   |   0.2240   |   0.3607   |    0.9064    |
+| bart-paper-titles-bio on BIOPubSumm |   0.4580   |   0.2541   |   0.3961   |    0.9027    |
+|   bart-paper-title-cs on CSPubSumm  |   0.5584   |   0.3818   |   0.5012   |    0.9233    |
 
 You can find a demo hosted on [HF spaces](https://huggingface.co/spaces/pietrocagnasso/paper-title-generation) to see all the models in action.
 
