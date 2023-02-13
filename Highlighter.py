@@ -97,6 +97,7 @@ class Highlighter():
             make_it_reproducible(seed)
 
         # build the datasets
+        print("--- BUILDING THE DATASET ---")
         if file.split(".")[-1] == "json":
             train_ds = PCEDataset(file=file,
                                   contributions_file=contributions_file,
@@ -122,7 +123,6 @@ class Highlighter():
                                           logging_dir="./logs",
                                           logging_steps=500,
                                           save_strategy="epoch",
-                                          load_best_model_at_end=True,
                                           report_to="none",
                                           fp16=True)
 
@@ -132,7 +132,7 @@ class Highlighter():
                           train_dataset=train_ds)
 
         # start the training
-        print("--- TRAIN THE MODEL ---")
+        print("--- TRAINING THE MODEL ---")
         trainer.train()
         # save the model
         trainer.save_model(model_output_dir)
