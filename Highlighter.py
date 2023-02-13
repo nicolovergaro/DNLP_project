@@ -314,7 +314,7 @@ class Highlighter():
                             del bins[sel_bin][ix]
                             
                 selected = [paper["sections"][sec][i] for i in selected]
-                res[pid] = chain(res[pid], selected)
+                res[pid] = list(chain(res[pid], selected))
                 
             rgs = [rg.get_scores(sent, paper["abstract"])["rouge-2"]["f"] for sent in selected]
             args = np.argsort(rgs)[::-1]
