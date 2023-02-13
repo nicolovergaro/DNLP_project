@@ -306,7 +306,7 @@ class Highlighter():
                     selected = [i for i in range(len(paper["sections"][sec]))]
                 else:
                     while len(selected) < contrib[sec]:
-                        sel_bin = np.random.choice(20, p=prob[sec])
+                        sel_bin = np.random.choice(len(prob[sec]), p=prob[sec])
                         if len(bins[sel_bin]) > 0:
                             ix = np.random.choice(len(bins[sel_bin]))
                             if len(paper["sections"][sec][ix]) > 1:
