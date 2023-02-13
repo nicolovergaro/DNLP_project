@@ -316,7 +316,7 @@ class Highlighter():
                 selected = [paper["sections"][sec][i] for i in selected]
                 res[pid] = list(chain(res[pid], selected))
                 
-            rgs = [rg.get_scores(sent, paper["abstract"])["rouge-2"]["f"] for sent in selected]
+            rgs = [rg.get_scores(sent, paper["abstract"])["rouge-2"]["f"] for sent in res[pid]]
             args = np.argsort(rgs)[::-1]
             
             res[pid] = [res[pid][i] for i in args]
