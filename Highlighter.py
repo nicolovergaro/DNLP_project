@@ -71,7 +71,7 @@ class Highlighter():
               epochs=1,
               per_device_batch_size=16,
               n_gpus=1,
-              lr=5e-5,
+              lr=1e-5,
               weight_decay=1e-2,
               model_output_dir="./best_model",
               seed=None
@@ -121,7 +121,7 @@ class Highlighter():
                                           learning_rate=lr,
                                           weight_decay=weight_decay,
                                           logging_dir="./logs",
-                                          logging_steps=500,
+                                          logging_steps=1000,
                                           save_strategy="epoch",
                                           report_to="none",
                                           fp16=True)
